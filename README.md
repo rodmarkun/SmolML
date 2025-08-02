@@ -12,7 +12,7 @@
 
 Ever wondered what goes on *inside* those powerful machine learning libraries like Scikit-learn, PyTorch, or TensorFlow? How does a neural network *actually* learn? How is gradient descent implemented?
 
-SmolML is our answer! It's a fully functional (though simplified) machine learning library built using **only pure Python** and its basic `collections`, `random`, and `math` modules. No NumPy, no SciPy, no C++ extensions – just Python, all the way down.
+SmolML is a fully functional (though simplified) machine learning library built using **only pure Python** and its basic `collections`, `random`, and `math` modules. No NumPy, no SciPy, no C++ extensions – just Python, all the way down.
 
 The goal isn't to compete with production-grade libraries on speed or features, but to provide a **transparent, understandable, and educational** implementation of core machine learning concepts.
 
@@ -28,7 +28,7 @@ You can read these guides of the different sections of SmolML in any order, thou
 - [SmolML - Preprocessing: Make your data meaningful](https://github.com/rodmarkun/SmolML/tree/main/smolml/preprocessing)
 - [SmolML - The utility room!](https://github.com/rodmarkun/SmolML/tree/main/smolml/utils)
  
-## Why SmolML? The Philosophy 🎓
+## The Philosophy 🎓
 
 We believe the best way to truly understand complex topics like machine learning is often to **build them yourself**. Production libraries are fantastic tools, but their internal complexity and optimizations can sometimes obscure the fundamental principles.
 
@@ -70,18 +70,16 @@ SmolML provides explains the essential building blocks for any ML library:
 * **Educators:** Looking for a simple, transparent codebase to demonstrate ML principles.
 * **Anyone:** Who enjoys learning by building!
 
-## Limitations! ⚠️
+## Limitations ⚠️
 
-Let's be crystal clear: SmolML is built for **learning**, not for breaking speed records or handling massive datasets.
+SmolML is built for **learning**, not for breaking speed records or handling massive datasets.
 * **Performance:** Being pure Python, it's WAAAY slower than libraries using optimized C/C++/Fortran backends (like NumPy).
 * **Scale:** It's best suited for small datasets and toy problems where understanding the mechanics is more important than computation time.
 * **Production Use:** **Do not** use SmolML for production applications. Stick to battle-tested libraries like Scikit-learn, PyTorch, TensorFlow, JAX, etc., for real-world tasks.
 
-Think of it as learning to build a go-kart engine from scratch before driving a Formula 1 car. It teaches you the fundamentals in a hands-on way!
-
 ## Getting Started
 
-The best way to use SmolML is to clone this repository and explore the code and examples (if available).
+The best way to use SmolML is to clone this repository and explore the code and examples.
 
 ```bash
 git clone https://github.com/rodmarkun/SmolML
