@@ -1,40 +1,60 @@
 # SmolML - Core: Automatic Differentiation & N-Dimensional Arrays
 
-Welcome to the core of SmolML! This is where the magic begins if you want to understand how machine learning models, especially neural networks, learn from data. We'll break down two fundamental concepts: how computers *calculate* the direction for learning (automatic differentiation) and how we handle the multi-dimensional data involved.
+Welcome to the core of SmolML! This is where the magic begins if you want to understand how machine learning models, especially neural networks, learn from data. We'll break down two fundamental concepts: how computers *calculate* the direction for learning (**automatic differentiation**) and how we handle the **multi-dimensional data** involved.
 
-This part of SmolML focuses on handling this data and calculating gradients automatically. Why gradients? Why automatic? Let's dive in.
+This part of SmolML focuses on handling this data and calculating gradients automatically. What are gradients and why do we need them? Let's dive in.
 
 ## Why Do We Need Gradients Anyway?
 
-Think about teaching a computer to recognize a cat in a photo. The computer makes a prediction based on its current internal settings (parameters or weights). Initially, these settings are random, so the prediction is likely wrong. We measure *how wrong* using a "loss function" (we have those in `smolml\utils\losses.py`, explained in another section) – a lower loss means a better prediction.
+Think about teaching a computer to recognize a cat in a photo. The computer makes a prediction based on its current internal settings (parameters or weights). Initially, these settings are random, so the prediction is likely wrong. We measure *how wrong* using a **loss function** (we have those in `smolml\utils\losses.py`, explained in another section): basically, *a lower loss means a better prediction*.
 
-The goal is to adjust the computer's parameters to *minimize* this loss. But how do we know *which way* to adjust each parameter? Should we increase it? Decrease it? By how much?
+The goal is to adjust our computer's parameters to *minimize* this loss. But how do we know *which way* to adjust each parameter? Should we increase it? Decrease it? By how much?
 
 ![Figure-3-37-Gradient-descent-Algorithm-illustration(1)](https://github.com/user-attachments/assets/93e2df5b-5f02-43d1-a4b9-3e9daeb81a9a)
 
-This is where **gradients** come in. The gradient of the loss function with respect to a specific parameter tells us the "slope" of the loss at that parameter's current value. It points in the direction of the *steepest increase* in the loss. So, if we want to *decrease* the loss, we nudge the parameter in the *opposite* direction of the gradient (the purple arrow in the above image). The size of the gradient also tells us how sensitive the loss is to that parameter – a larger gradient suggests a bigger adjustment might be needed.
+This is where **gradients** come in. The gradient of the loss function with respect to a specific parameter tells us the "slope" of the loss at that parameter's current value. It points in the direction of the *steepest increase* in the loss. So, if we want to *decrease* the loss, we nudge the parameter in the *opposite* direction of the gradient (the purple arrow in the above image). The size of the gradient also tells us how sensitive the loss is to that parameter: a larger gradient suggests a bigger adjustment might be needed.
 
-Calculating these gradients for every parameter allows the model to iteratively improve, step-by-step, reducing its error. This process is the heart of training most ML models.
+For a loss function `J` with respect to weight parameter `w`, the **gradient** is mathematically expressed as:
+
+$$
+\frac{\partial J}{\partial w}
+$$
+
+Calculating these gradients for every parameter allows the model to iteratively improve, step-by-step, as moving in the opposite direction reduces the error. This process is the heart of training most ML models.
 
 ## Why "Automatic" Differentiation?
 
-Okay, so we need gradients. For a simple function like $y = a \times b + c$, we can find the gradients ($\frac{\partial y}{\partial a}$, $\frac{\partial y}{\partial b}$, $\frac{\partial y}{\partial c}$) using basic calculus rules (like the chain rule).
+Let's think of a simple function like $y = a \times b + c$, we can find the gradients ($\frac{\partial y}{\partial a}$, $\frac{\partial y}{\partial b}$, $\frac{\partial y}{\partial c}$) using basic calculus rules (like the chain rule). You may remember some of this math from your highschool years.
 
 But modern neural networks are *vastly* more complex. They are essentially giant, nested mathematical functions with potentially millions of parameters. Calculating all those gradients manually is practically impossible and incredibly prone to errors.
 
-**Automatic Differentiation (AutoDiff)** is the solution. It's a technique where the computer itself keeps track of every single mathematical operation performed, building a computational graph. Then, by applying the chain rule systematically backwards through this graph (a process called **backpropagation**), it can efficiently compute the gradient of the final output (the loss) with respect to every single input and parameter involved.
+**Automatic Differentiation (AutoDiff)** is the solution. It's a **technique** where the computer itself keeps track of every single mathematical operation performed, building a computational graph. Then, by applying the chain rule systematically backwards through this graph (a process called **backpropagation**), it can efficiently compute the gradient of the final output (the loss) with respect to every single input and parameter involved.
 
 <div align="center">
   <img src="https://github.com/user-attachments/assets/75372083-69b3-47b4-959d-609d7f426751" width="600">
 </div>
 
+As you can see in the previous image, we can use a **Directed Acyclic Graph** (DAG) where each node represents a value in our computation. The edges between nodes show us which values are used as inputs to compute other values, and what operation connects them (like addition, multiplication, etc.).
+
+And now, we can apply the chain rule to automatically compute the gradient of our final output (shown as `d` in the image, which will be our loss function in our actual implementation) with respect to every single input and parameter in the entire graph. This gives us the exact information we need: *how much each variable needs to change to minimize our loss*.
+
+
+> *(If you want a deep dive, the concept of backpropagation and automatic differentiation is greatly explained in this [Andrej Karpathy video](https://www.youtube.com/watch?v=VMj-3S1tku0), highly recommended!)*
+
 ## Implementing AutoDiff with `Value`
 
-This library uses the `Value` class to implement Automatic Differentiation.
-
-*(If you want a deep dive, the concept of backpropagation and automatic differentiation is greatly explained in this [Andrej Karpathy video](https://www.youtube.com/watch?v=VMj-3S1tku0), highly recommended!)*
+SmolML uses the `Value` class to implement Automatic Differentiation.
 
 **What is a `Value`?**
+
+There are several ways to implement this DAG structure. We'll be following the same `Value` class approach that Karpathy uses in his video, with just a few small differences.
+
+Let's think about what each node in our DAG actually needs to keep track of. Looking back at the previous image, what information does each node hold? We need a class that can handle these four essential things:
+
+1. Each node needs to remember the current **numerical result** of whatever computation it represents
+2. We need to store how much this node contributes to the final value, which means, its **gradient with respect to the loss** (this gets filled in during backpropagation)
+3. Each node should know what **mathematical operation** created it in order to correctly compute its gradient
+4. Since we'll need to traverse backwards from the final output all the way to the original inputs during backpropagation, each node must **maintain links to the `Value` objects that were used to create it**
 
 Think of a `Value` object as a smart container for a single number (a scalar). It doesn't just hold the number; it prepares for gradient calculations. It stores:
 1.  `data`: The actual numerical value (e.g., 5.0, -3.2).
@@ -61,9 +81,9 @@ y = d + c  # y._op = "+", y._prev = {d, c}
 
 **Backpropagation: Calculating Gradients Automatically**
 
-So, how do we get the gradients without doing the calculus ourselves? By calling the `.backward()` method on the final `Value` object (the one representing our overall loss, like y in the simple example).
+So, how do we get the gradients without doing the calculus ourselves? We achieve this by calling the `.backward()` method on the final `Value` object (this final `Value` is the one that will represent our overall **loss**).
 
-Here’s the process conceptually:
+Let's backpropagate the small example from just before:
 
 1. Start at the end (`y`). The gradient of `y` with respect to itself is 1. So, we set `y.grad = 1`.
 
@@ -85,7 +105,7 @@ While `Value` objects handle the core AutoDiff for single numbers, machine learn
 
 What is an `MLArray`?
 
-Think of `MLArray` as an N-dimensional array (like NumPy arrays, but built from scratch here). It can be a list (1D), a list-of-lists (2D matrix), or nested deeper for higher dimensions.
+Think of `MLArray` as an N-dimensional array (like NumPy arrays, but built from scratch here). It can be a list (1D), a list-of-lists (2D matrix), or nested deeper for higher dimensions. It's made in Python, so don't expect a high-performance implementation.
 
 <div align="center">
   <img src="https://github.com/user-attachments/assets/29606bb9-fa55-457c-b2ac-120596aebc11" width="600">
@@ -148,10 +168,9 @@ print(w.grad())
 
 **Utility Functions & Properties**
 
-The library also includes helpers:
+The library also includes some helpers within the `MLArray` class. If you want to build your own ML library it would be interesting to add them as well:
 
 - `zeros()`, `ones()`, `randn()`: Create `MLArray`s filled with zeros, ones, or standard random numbers.
-- `xavier_uniform()`, `xavier_normal()`: Implement common strategies for initializing weight matrices in neural networks.
 - `to_list()`: Convert an `MLArray` back to a standard Python list (this extracts the `.data` and discards gradient information).
 - `shape`: A property to quickly get the dimensions tuple of the `MLArray`.
 - `size()`: Returns the total number of elements in the `MLArray`.

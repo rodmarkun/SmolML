@@ -1,6 +1,6 @@
 # SmolML - Regression: Predicting Continuous Values
 
-Building upon the core concepts of automatic differentiation (`Value`) and N-dimensional arrays (`MLArray`) explained in the SmolML Core, we can now implement various machine learning models. This section focuses on **regression models**, which are used to predict continuous numerical outputs. Think of predicting house prices, stock values, or temperature based on input features.
+Building upon the core concepts of automatic differentiation (`Value`) and N-dimensional arrays (`MLArray`) explained in the [SmolML Core](https://github.com/rodmarkun/SmolML/tree/main/smolml/core), we can now implement various machine learning models. This section focuses on **regression models**, which are used to predict continuous numerical outputs. Think of predicting house prices, stock values, or temperature based on input features.
 
 While deep neural networks offer immense power, simpler models like Linear Regression or its extension, Polynomial Regression, are often excellent starting points, computationally efficient, and highly interpretable. They share the same fundamental learning principle as complex networks: minimizing a loss function by adjusting parameters using gradient descent, all powered by our automatic differentiation engine using the `Value` class.
 
@@ -12,6 +12,8 @@ The goal in regression is to find a mathematical function that maps input featur
   <img src="https://github.com/user-attachments/assets/79874cec-8650-4628-af1f-ca6fdc4debe5" width="600">
 </div>
 
+ > *(I highly recommend to [check out this deep-dive into Linear Regression by MLU-Explain](https://mlu-explain.github.io/linear-regression/), it's very visual!)*
+
 How do we find the *best* parameters?
 1.  **Prediction:** We start with initial (often random) parameters and use the model to make predictions on our training data.
 2.  **Loss Calculation:** We compare these predictions to the actual known values using a **loss function** (like Mean Squared Error - MSE). This function quantifies *how wrong* the model currently is. A lower loss is better.
@@ -21,7 +23,7 @@ How do we find the *best* parameters?
 
 This iterative process allows the regression model to "learn" the underlying relationship between the inputs and outputs from the data.
 
-## The `Regression` Base Class: A Common Framework
+## The `Regression` Base Class
 
 To streamline the implementation of different regression algorithms, in SmolML we made a `Regression` base class (in `regression.py`). This class handles the common structure and the training loop logic. Specific models like `LinearRegression` inherit from it.
 

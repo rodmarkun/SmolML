@@ -1,6 +1,6 @@
-# SmolML: Machine Learning from Scratch, Made Clear! ✨
+# SmolML: A Machine Learning Library from Scratch!
 
-**A pure Python machine learning library built entirely from the ground up for educational purposes. Made to understand how ML really works!**
+**SmolML is a pure Python machine learning library built entirely from the ground up for educational purposes. Made to teach and understand how ML really works!**
 
 <div align="center">
   <img src="https://github.com/user-attachments/assets/c00b89e9-58a3-44d8-b9c3-4b47052eb150" width="600" alt="FlyLLM Logo">
@@ -10,11 +10,11 @@
 
 ## What is SmolML? 🤔
 
-Ever wondered what goes on *inside* those powerful machine learning libraries like Scikit-learn, PyTorch, or TensorFlow? How does a neural network *actually* learn? How is gradient descent implemented?
+Ever wondered what goes on *inside* those powerful machine learning libraries like [Scikit-Learn](https://scikit-learn.org/stable/), [PyTorch](https://pytorch.org/), or [TensorFlow](https://www.tensorflow.org/)? How does a neural network *actually* learn? How is gradient descent implemented? How do different data-handling tools work?
 
-SmolML is a fully functional (though simplified) machine learning library built using **only pure Python** and its basic `collections`, `random`, and `math` modules. No NumPy, no SciPy, no C++ extensions – just Python, all the way down.
+SmolML is a fully functional (though *simplified*) machine learning library built using **only pure Python** and basic (`collections`, `random`, and `math`) modules. No NumPy, no SciPy, no C++ extensions. Just Python, all the way down.
 
-The goal isn't to compete with production-grade libraries on speed or features, but to provide a **transparent, understandable, and educational** implementation of core machine learning concepts.
+The goal is to provide a **transparent, understandable, and educational** implementation of core machine learning concepts.
 
 ## Walkthrough 📖
 
@@ -28,28 +28,28 @@ You can read these guides of the different sections of SmolML in any order, thou
 - [SmolML - Preprocessing: Make your data meaningful](https://github.com/rodmarkun/SmolML/tree/main/smolml/preprocessing)
 - [SmolML - The utility room!](https://github.com/rodmarkun/SmolML/tree/main/smolml/utils)
  
-## The Philosophy 🎓
+### Approach
 
 We believe the best way to truly understand complex topics like machine learning is often to **build them yourself**. Production libraries are fantastic tools, but their internal complexity and optimizations can sometimes obscure the fundamental principles.
 
 SmolML strips away these layers to focus on the core ideas:
-* **Learning from First Principles:** Every major component is built from scratch, letting you trace the logic from basic operations to complex algorithms.
-* **Demystifying the Magic:** See how concepts like automatic differentiation (autograd), optimization algorithms, and model architectures are implemented in code.
-* **Minimal Dependencies:** Relying only on Python's standard library makes the codebase accessible and easy to explore without external setup hurdles.
-* **Focus on Clarity:** Code is written with understanding, not peak performance, as the primary goal.
+* Every major component is **built from scratch**, letting you trace the logic from basic operations to complex algorithms.
+* See how concepts like automatic differentiation (autograd), optimization algorithms, and model architectures are **implemented in code**, so that you can implement them yourself.
+* Relying only on Python's standard library makes the codebase **accessible and easy to explore** without external setup hurdles.
+* Code is written with **understanding**, not peak performance, as the primary goal.
 
-In order to learn as much as possible, we recommend reading through the guides, checking the code, and then trying to implement your own versions of these components.
+> In order to learn as much as possible, we recommend reading through the guides, checking the code, and then trying to implement your own versions of these components.
 
-## What's Inside? Features 🛠️
+## Features 
 
-SmolML provides explains the essential building blocks for any ML library:
+SmolML provides an implementation of the essential building blocks for any Machine Learning library:
 
 * **The Foundation: Custom Arrays & Autograd Engine:**
-    * **Automatic Differentiation (`Value`):** A simple autograd engine that tracks operations and computes gradients automatically – the heart of training neural networks!
-    * **N-dimensional Arrays (`MLArray`):** A custom array implementation inspired by NumPy, supporting common mathematical operations needed for ML. Extremely inefficient due to being written in Python, but ideal for understanding N-Dimensional Arrays.
+    * **Automatic Differentiation (`Value`):** A simple autograd engine that tracks operations and computes gradients automatically. (See `smolml/core/value.py`)
+    * **N-dimensional Arrays (`MLArray`):** A custom array implementation inspired by [NumPy](https://numpy.org/) (though simplified), supporting common mathematical operations needed for ML. Extremely inefficient due to being written in Python, but ideal for understanding N-Dimensional Arrays, one of the most underrated skills of a ML engineer. (See `smolml/core/ml_array.py`)
 
 * **Essential Preprocessing:**
-    * **Scalers (`StandardScaler`, `MinMaxScaler`):** Fundamental tools to prepare your data, because algorithms tend to perform better when features are on a similar scale.
+    * **Scalers (`StandardScaler`, `MinMaxScaler`):** Fundamental tools to prepare your data, because algorithms tend to perform better when features are on a similar scale. (See `smolml/preprocessing/scalers.py`)
 
 * **Build Your Own Neural Networks:**
     * **Activation Functions:** Non-linearities like `relu`, `sigmoid`, `softmax`, `tanh` that allow networks to learn complex patterns. (See `smolml/utils/activation.py`)
@@ -61,21 +61,13 @@ SmolML provides explains the essential building blocks for any ML library:
     * **Regression:** Implementations of `Linear` and `Polynomial` regression.
     * **Neural Networks:** A flexible framework for building feed-forward neural networks.
     * **Tree-Based Models:** `Decision Tree` and `Random Forest` implementations for classification and regression.
-    * **K-Means:** `KMeans` clustering algorithm for grouping similar data points together.
+    * **K-Means:** `KMeans` unsupervised clustering algorithm for grouping similar data points together.
 
-## Who is SmolML For? 🎯
+## Limitations
 
-* **Students:** Learning ML concepts for the first time.
-* **Developers:** Curious about the internals of ML libraries they use daily.
-* **Educators:** Looking for a simple, transparent codebase to demonstrate ML principles.
-* **Anyone:** Who enjoys learning by building!
+SmolML is built for **learning**, and thus it should not be used for production. Being pure Python, it's **WAAAAY** slower and uses a ton more memory than libraries using optimized C/C++/Fortran backends (like NumPy).
 
-## Limitations ⚠️
-
-SmolML is built for **learning**, not for breaking speed records or handling massive datasets.
-* **Performance:** Being pure Python, it's WAAAY slower than libraries using optimized C/C++/Fortran backends (like NumPy).
-* **Scale:** It's best suited for small datasets and toy problems where understanding the mechanics is more important than computation time.
-* **Production Use:** **Do not** use SmolML for production applications. Stick to battle-tested libraries like Scikit-learn, PyTorch, TensorFlow, JAX, etc., for real-world tasks.
+It's best suited for small datasets and toy problems where understanding the mechanics is more important than computation time. **Do not** use SmolML for production applications. Stick to battle-tested libraries like Scikit-learn, PyTorch, TensorFlow, JAX, etc., for real-world tasks.
 
 ## Getting Started
 
@@ -87,7 +79,7 @@ cd SmolML
 # Explore the code in the smolml/ directory!
 ```
 
-You can also run the multiple tests in the `tests/` folder. Just install the `requirements.txt` (this is for comparing SmolML against another standard libraries like TensorFlow, sklearn, etc, and generate plots with matplotlib).
+You can also run the multiple tests in the `tests/` folder. Just install the `requirements.txt` (this is for comparing SmolML against another standard libraries like TensorFlow, sklearn, etc, and generate plots with matplotlib. SmolML does not use any of these libraries whatsoever).
 
 ```bash
 cd tests
