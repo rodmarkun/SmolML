@@ -1,9 +1,8 @@
 # SmolML: A Machine Learning Library from Scratch!
 
-**SmolML is a pure Python machine learning library built entirely from the ground up for educational purposes. Made to teach and understand how ML really works!**
-
 <div align="center">
-  <img src="https://github.com/user-attachments/assets/c00b89e9-58a3-44d8-b9c3-4b47052eb150" width="600" alt="FlyLLM Logo">
+<b>SmolML is a pure Python machine learning library built entirely from the ground up for educational purposes. Made to teach and understand how ML really works!</b>
+<img src="https://github.com/user-attachments/assets/c00b89e9-58a3-44d8-b9c3-4b47052eb150" width="600" alt="SmolML Cover">
 </div>
 
 ---
@@ -27,7 +26,7 @@ You can read these guides of the different sections of SmolML in any order, thou
 - [SmolML - K-Means: Finding Groups in Your Data!](https://github.com/rodmarkun/SmolML/tree/main/smolml/models/unsupervised)
 - [SmolML - Preprocessing: Make your data meaningful](https://github.com/rodmarkun/SmolML/tree/main/smolml/preprocessing)
 - [SmolML - The utility room!](https://github.com/rodmarkun/SmolML/tree/main/smolml/utils)
- 
+
 ### Approach
 
 We believe the best way to truly understand complex topics like machine learning is often to **build them yourself**. Production libraries are fantastic tools, but their internal complexity and optimizations can sometimes obscure the fundamental principles.
@@ -40,7 +39,7 @@ SmolML strips away these layers to focus on the core ideas:
 
 > In order to learn as much as possible, we recommend reading through the guides, checking the code, and then trying to implement your own versions of these components.
 
-## Features 
+## Features
 
 SmolML provides an implementation of the essential building blocks for any Machine Learning library:
 

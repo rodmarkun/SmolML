@@ -1,12 +1,12 @@
 # SmolML - Core: Automatic Differentiation & N-Dimensional Arrays
 
-Welcome to the core of SmolML! This is where the magic begins if you want to understand how machine learning models, especially neural networks, learn from data. We'll break down two fundamental concepts: how computers *calculate* the direction for learning (**automatic differentiation**) and how we handle the **multi-dimensional data** involved.
+Welcome to the core of SmolML! This is where the magic begins if you want to understand how machine learning models, especially neural networks, learn from data. We'll break down two fundamental concepts: how models *calculate* the direction for learning (**automatic differentiation**) and how we handle the **multi-dimensional data** involved.
 
 This part of SmolML focuses on handling this data and calculating gradients automatically. What are gradients and why do we need them? Let's dive in.
 
 ## Why Do We Need Gradients Anyway?
 
-Think about teaching a computer to recognize a cat in a photo. The computer makes a prediction based on its current internal settings (parameters or weights). Initially, these settings are random, so the prediction is likely wrong. We measure *how wrong* using a **loss function** (we have those in `smolml\utils\losses.py`, explained in another section): basically, *a lower loss means a better prediction*.
+Think about teaching a model to recognize a cat in a photo. The model makes a prediction based on its current internal settings (parameters or weights). Initially, these settings are random, so the prediction is likely wrong. We measure *how wrong* using a **loss function** (we have those in `smolml\utils\losses.py`, explained in another section): basically, *a lower loss means a better prediction*.
 
 The goal is to adjust our computer's parameters to *minimize* this loss. But how do we know *which way* to adjust each parameter? Should we increase it? Decrease it? By how much?
 
