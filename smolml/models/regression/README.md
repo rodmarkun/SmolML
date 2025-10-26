@@ -11,6 +11,25 @@ The goal in regression is to find a mathematical function that maps input featur
 <div align="center">
   <img src="https://github.com/user-attachments/assets/79874cec-8650-4628-af1f-ca6fdc4debe5" width="600">
 </div>
+But how does it actually *predict* values?
+
+When predicting values, regression models use a formula like this one:
+
+$$
+y = wx+b
+$$
+
+Where `w` is the **weight** and `b` is the **bias**. You may have encountered a formula like this one before, it is just the formula of a straight line! Where `w` is the slope, and `b` is the offset or y-intercept.
+
+But wait! This formula only works with a *single input feature* ($x$). What if we want to account for square footage ($x_1$), number of bedrooms ($x_2$) and distance to the city center ($x_3$)?
+
+In that case, we add a weight for each input feature, giving us:
+
+$$
+y = w_1x_1 + w_2x_2 + w_3x_3 + b
+$$
+
+This is the formula our regression model will use to predict values.
 
  > *(I highly recommend to [check out this deep-dive into Linear Regression by MLU-Explain](https://mlu-explain.github.io/linear-regression/), it's very visual!)*
 
@@ -25,9 +44,17 @@ This iterative process allows the regression model to "learn" the underlying rel
 
 ## The `Regression` Base Class
 
-To streamline the implementation of different regression algorithms, in SmolML we made a `Regression` base class (in `regression.py`). This class handles the common structure and the training loop logic. Specific models like `LinearRegression` inherit from it.
+To streamline the implementation of different regression algorithms, in SmolML we will make a `Regression` base class (in `regression.py`). This class handles the common structure and the training loop logic, and it will be the foundation for all of our regression models. Specific models like `LinearRegression` or `PolynomialRegression` (different kinds of regression) will inherit from it.
 
-Here's how it works:
+First off, our model needs to know **how many input features** we're working with from the beginning in order to initialize the correct number of weights. We'll also need a **loss function** for calculating *how wrong we are*. Finally, we'll use an **optimizer** and an **initializer**, just like with all our models. If you don't want to implement those just yet, you can initialize the weights randomly and implement simple gradient descent in the `fit()` method.
+
+Next, we need to define a `fit()` method that trains the network based on the input features `X` and the true values `y` (which are `MLArrays`!) for a certain number of `iterations`. We'll also need a `restart()` to reset all gradients in our model (`MLArray` has a method for that, check it out!) 
+
+Finally, we need a `predict()` method for making predictions based on an input `X`. Since we're just implementing a placeholder class that specific models will inherit from, you can throw a `NotImplementedError` whenever this is called. We'll implement the actual logic in each specific model.
+
+Try to build something like this by yourself before reading further! (It does not need to be functional yet, but try to *fit* all of this together).
+
+Here's how we fit all of that in the implementation:
 
 * **Initialization (`__init__`)**:
     * Accepts the `input_size` (number of expected input features), a `loss_function`, an `optimizer` instance, and a weight `initializer`.
@@ -35,6 +62,19 @@ Here's how it works:
         * `self.weights`: An `MLArray` holding the coefficients for each input feature. Its shape is determined by `input_size`, and values are set by the `initializer`.
         * `self.bias`: A scalar `MLArray` (initialized to 1) representing the intercept term.
     * Because `weights` and `bias` are `MLArray`s, they inherently contain `Value` objects. This ensures they are part of the computational graph and their gradients can be automatically computed during training.
+
+    ```python
+        def __init__(self, input_size: int, loss_function: callable = losses.mse_loss, optimizer: optimizers.Optimizer = optimizers.SGD, initializer: initializers.WeightInitializer = initializers.XavierUniform):
+            """
+            Initializes base regression model with common parameters.
+            """
+            self.input_size = input_size
+            self.loss_function = loss_function
+            self.optimizer = optimizer
+            self.initializer = initializer
+            self.weights = self.initializer.initialize((self.input_size,))
+            self.bias = ml_array.ones((1))
+    ```
 
 * **Training (`fit`)**:
     * This method orchestrates the gradient descent loop described earlier. For a specified number of `iterations`:
@@ -44,14 +84,65 @@ Here's how it works:
         4.  **Parameter Update:** Uses `self.optimizer.update(...)` to adjust `self.weights` and `self.bias` based on their computed gradients (`weights.grad()` and `bias.grad()`) and the optimizer's logic (e.g., learning rate).
         5.  **Gradient Reset:** Calls `self.restart(X, y)` to zero out all gradients (`.grad` attributes of the `Value` objects) in the parameters and data, preparing for the next iteration.
 
+
+    ```python
+        def fit(self, X, y, iterations: int = 100, verbose: bool = True, print_every: int = 1):
+            """
+            Trains the regression model using gradient descent.
+            """
+            X, y = MLArray.ensure_array(X, y)
+            losses = []
+            for i in range(iterations):
+                # Make prediction 
+                y_pred = self.predict(X)
+                # Compute loss
+                loss = self.loss_function(y, y_pred)
+                losses.append(loss.data.data)
+                # Backward pass
+                loss.backward()
+
+                # Update parameters
+                self.weights, self.bias = self.optimizer.update(self, self.__class__.__name__, param_names=("weights", "bias"))
+
+                # Reset gradients
+                X, y = self.restart(X, y)
+
+                if verbose:
+                    if (i+1) % print_every == 0:
+                        print(f"Iteration {i + 1}/{iterations}, Loss: {loss.data}")
+
+            return losses
+    ```
+
 * **Prediction (`predict`)**:
     * Defined in the base class but raises `NotImplementedError`. Why? Because the core logic of *how* to make a prediction differs between regression types (e.g., linear vs. polynomial). Each subclass *must* provide its own `predict` method defining its specific mathematical formula using `MLArray` operations.
+
+    ```python
+        def predict(self, X):
+            """
+            Abstract method for making predictions.
+            Must be implemented by specific regression classes.
+            """
+            raise NotImplementedError("Regression is only base class for Regression algorithms, use one of the classes that inherit from it.")
+    ```
 
 * **Gradient Reset (`restart`)**:
     * A helper that simply calls the `.restart()` method on the `weights`, `bias`, input `X`, and target `y` `MLArray`s. This efficiently resets the `.grad` attribute of all underlying `Value` objects to zero.
 
+    ```python
+        def restart(self, X, y):
+            """
+            Resets gradients for all parameters and data for next iteration.
+            """
+            X = X.restart()
+            y = y.restart()
+            self.weights = self.weights.restart()
+            self.bias = self.bias.restart()
+            return X, y
+    ```
+
 * **Representation (`__repr__`)**:
-    * Provides a nicely formatted string summary of the configured model, including its type, parameter shapes, optimizer, loss function, and estimated memory usage.
+    * Provides a nicely formatted string summary of the configured model, including its type, parameter shapes, optimizer, loss function, and estimated memory usage. This implementation is not mandatory, but helps with debugging and giving information.
 
 ## Specific Models Implemented
 
@@ -63,14 +154,29 @@ Here's how it works:
 
 This is the most fundamental regression model. It assumes a direct linear relationship between the input features `X` and the output `y`. The goal is to find the best weights `w` and bias `b` such that $y \approx Xw + b$.
 
-* **Implementation (`regression.py`)**:
-    * Inherits directly from `Regression`.
-    * Its primary contribution is overriding the `predict` method.
-* **Prediction (`predict`)**:
-    * Implements the linear equation: `return X @ self.weights + self.bias`.
-    * It takes the input `X` (`MLArray`), performs matrix multiplication (`@`) with `self.weights` (`MLArray`), and adds `self.bias` (`MLArray`). Because `X`, `weights`, and `bias` are all `MLArray`s containing `Value` objects, this single line of code automatically constructs the necessary computational graph for backpropagation.
-* **Training**:
-    * Uses the `fit` method directly inherited from the `Regression` base class without modification. The base class handles the entire training loop using the `predict` logic provided by `LinearRegression`.
+We already have everything we need for this model! The only thing we must implement is the `predict()` method. And we already discussed the formula:
+
+$$
+y = w_1x_1 + w_2x_2 + ... + w_ix_i + b
+$$
+
+Where `i` is our number of features. When first looking at this formula, how do you think we should handle the $w_ix_i$ part? Maybe a `for` loop where we multiply each weight by each input?
+
+No need! Remember all `x` values and all `w` values are each in their own `MLArray`. Knowing this, we can just use **matrix multiplication** `@` to compute it!
+
+```python
+   def predict(self, X):
+       """
+       Makes predictions using linear model equation.
+       """
+       if not isinstance(X, MLArray):
+            raise TypeError(f"Input data must be MLArray, not {type(X)}")
+       return X @ self.weights + self.bias
+```
+
+It takes the input `X` (`MLArray`), performs matrix multiplication (`@`) with `self.weights` (`MLArray`), and adds `self.bias` (`MLArray`). Because `X`, `weights`, and `bias` are all `MLArray`s containing `Value` objects, this single line of code automatically constructs the necessary computational graph for backpropagation, which we use in `fit()`!
+
+And that's it! We now have a working linear regression model. Feel free to experiment with it in the `tests/regression_tests.py` and add fit some toy problems! Let's try now to implement a more complex model, the `PolynomialRegression` one.
 
 ### `PolynomialRegression`
 
