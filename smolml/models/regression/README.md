@@ -2,7 +2,7 @@
 
 Building upon the core concepts of automatic differentiation (`Value`) and N-dimensional arrays (`MLArray`) explained in the [SmolML Core](https://github.com/rodmarkun/SmolML/tree/main/smolml/core), we can now implement various machine learning models. This section focuses on **regression models**, which are used to predict continuous numerical outputs. Think of predicting house prices, stock values, or temperature based on input features.
 
-While deep neural networks offer immense power, simpler models like Linear Regression or its extension, Polynomial Regression, are often excellent starting points, computationally efficient, and highly interpretable. They share the same fundamental learning principle as complex networks: minimizing a loss function by adjusting parameters using gradient descent, all powered by our automatic differentiation engine using the `Value` class.
+While deep neural networks offer immense power, simpler models like Linear Regression or its extension, Polynomial Regression, are often excellent starting points, computationally efficient, and highly interpretable. They share the same fundamental learning principle as complex networks: minimizing a loss function by adjusting parameters using gradient descent, all powered by our automatic differentiation engine using the `Value` class. We will use them as a small testing ground for the classes we have just implemented!
 
 ## Regression Fundamentals: Learning from Data
 
@@ -14,12 +14,12 @@ The goal in regression is to find a mathematical function that maps input featur
 
  > *(I highly recommend to [check out this deep-dive into Linear Regression by MLU-Explain](https://mlu-explain.github.io/linear-regression/), it's very visual!)*
 
-How do we find the *best* parameters?
+How do we find the *best* parameters (**weights** and **bias** in this case) to make our predictions as accurate as possible?
 1.  **Prediction:** We start with initial (often random) parameters and use the model to make predictions on our training data.
-2.  **Loss Calculation:** We compare these predictions to the actual known values using a **loss function** (like Mean Squared Error - MSE). This function quantifies *how wrong* the model currently is. A lower loss is better.
-3.  **Gradient Calculation:** Just like in the core explanation, we need to know how to adjust each parameter to reduce the loss. Our `Value` objects and the concept of **backpropagation** automatically calculate the **gradient** of the loss with respect to each parameter (weights and bias). Remember, the gradient points towards the steepest *increase* in loss.
-4.  **Parameter Update:** We use an **optimizer** (like Stochastic Gradient Descent - SGD) to nudge the parameters in the *opposite* direction of their gradients, taking a small step towards lower loss.
-5.  **Iteration:** We repeat steps 1-4 many times (iterations or epochs), gradually improving the model's parameters until the loss is minimized or stops decreasing significantly.
+2.  **Loss Calculation:** We compare these predictions to the actual known values using a **loss function**. This function quantifies *how wrong* the model currently is.
+3.  **Gradient Calculation:** Just like in the core explanation, we need to know how to adjust each parameter to reduce the loss. We will use our `Value` objects and the concept of **backpropagation** to automatically calculate the **gradient** of the loss with respect to each parameter (**weights** and **bias**). Remember, the gradient points towards the steepest *increase* in loss, so we move to the other side!.
+4.  **Parameter Update:** We use an **optimizer** to nudge the parameters in the *opposite* direction of their gradients, taking a small step towards lower loss.
+5.  **Iteration:** We repeat steps 1-4 many times (iterations or epochs), gradually improving the model's parameters until the loss is greatly minimized or stops decreasing significantly.
 
 This iterative process allows the regression model to "learn" the underlying relationship between the inputs and outputs from the data.
 

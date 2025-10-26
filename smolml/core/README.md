@@ -12,7 +12,11 @@ The goal is to adjust our computer's parameters to *minimize* this loss. But how
 
 ![Figure-3-37-Gradient-descent-Algorithm-illustration(1)](https://github.com/user-attachments/assets/93e2df5b-5f02-43d1-a4b9-3e9daeb81a9a)
 
-This is where **gradients** come in. The gradient of the loss function with respect to a specific parameter tells us the "slope" of the loss at that parameter's current value. It points in the direction of the *steepest increase* in the loss. So, if we want to *decrease* the loss, we nudge the parameter in the *opposite* direction of the gradient (the purple arrow in the above image). The size of the gradient also tells us how sensitive the loss is to that parameter: a larger gradient suggests a bigger adjustment might be needed.
+This is where **gradients** come in. The gradient of the loss function with respect to a specific parameter tells us the "slope" of the loss at that parameter's current value (orange arrow in the image above!). It points in the direction of the *steepest increase* in the loss. So, if we want to *decrease* the loss, we nudge the parameter in the *opposite* direction of the gradient multiplying by $-\alpha$, where $\alpha$ is our **learning rate** (this multiplication is represented in the purple arrow). Basically, if the gradient points to the left, we want our model to go to the right and vice-versa. That's why we use a negative learning rate! The size of the gradient also tells us how sensitive the loss is to that parameter: a larger gradient means a bigger adjustment might be needed.
+
+A common problem in ML is models getting stuck in local minima while training, where the chosen learning rate isn't big enough to allow them to "leap" out of these suboptimal spots. This is bad! We want our model to reach the lowest possible loss (the global minimum). But if we choose a learning rate that's too big, we may overshoot this global minimum, or even bounce completely away from it. **Optimizers** were built to help tackle problems like this, and we'll see them in one of the next lessons (`smolml\utils\optimizers.py`).
+
+In reality, we never train with just one weight as the image portraits, this is a super-simplified example. For each weight we add, the visualization increases by one dimension. So if we had 100 weights, we'd need to display that in a 101-dimensional plot (100 weights + 1 loss)!
 
 For a loss function `J` with respect to weight parameter `w`, the **gradient** is mathematically expressed as:
 
@@ -20,15 +24,15 @@ $$
 \frac{\partial J}{\partial w}
 $$
 
-Calculating these gradients for every parameter allows the model to iteratively improve, step-by-step, as moving in the opposite direction reduces the error. This process is the heart of training most ML models.
+As a summary, calculating these gradients for every parameter allows the model to iteratively improve, step-by-step, as moving in the opposite direction reduces the error. This process is the heart of training most ML models.
 
 ## Why "Automatic" Differentiation?
 
 Let's think of a simple function like $y = a \times b + c$, we can find the gradients ($\frac{\partial y}{\partial a}$, $\frac{\partial y}{\partial b}$, $\frac{\partial y}{\partial c}$) using basic calculus rules (like the chain rule). You may remember some of this math from your highschool years.
 
-But modern neural networks are *vastly* more complex. They are essentially giant, nested mathematical functions with potentially millions of parameters. Calculating all those gradients manually is practically impossible and incredibly prone to errors.
+But modern neural networks are *vastly* more complex. They are essentially giant, nested mathematical functions with potentially millions of parameters. Calculating all those gradients manually is practically impossible and incredibly prone to errors!
 
-**Automatic Differentiation (AutoDiff)** is the solution. It's a **technique** where the computer itself keeps track of every single mathematical operation performed, building a computational graph. Then, by applying the chain rule systematically backwards through this graph (a process called **backpropagation**), it can efficiently compute the gradient of the final output (the loss) with respect to every single input and parameter involved.
+**Automatic Differentiation (AutoDiff)** is the solution. It's a **technique** where the computer itself keeps track of every single mathematical operation performed, building a computational graph. We will call this the `forward` phase, as information travels from the beggining to the end of the graph. Then, by applying the chain rule systematically backwards through this graph (a process called **backpropagation**), it can efficiently compute the gradient of the final output (the loss) with respect to every single input and parameter involved. We will call this the `backward` phase, take a look at the next image!
 
 <div align="center">
   <img src="https://github.com/user-attachments/assets/75372083-69b3-47b4-959d-609d7f426751" width="600">
@@ -36,8 +40,7 @@ But modern neural networks are *vastly* more complex. They are essentially giant
 
 As you can see in the previous image, we can use a **Directed Acyclic Graph** (DAG) where each node represents a value in our computation. The edges between nodes show us which values are used as inputs to compute other values, and what operation connects them (like addition, multiplication, etc.).
 
-And now, we can apply the chain rule to automatically compute the gradient of our final output (shown as `d` in the image, which will be our loss function in our actual implementation) with respect to every single input and parameter in the entire graph. This gives us the exact information we need: *how much each variable needs to change to minimize our loss*.
-
+And now, we can apply the chain rule to automatically compute the gradient of our final output (shown as `d` in the image, which will be our **loss function** in our actual implementation) with respect to every single input and parameter in the entire graph. This gives us the exact information we need: *how much each variable needs to change to minimize our loss*.
 
 > *(If you want a deep dive, the concept of backpropagation and automatic differentiation is greatly explained in this [Andrej Karpathy video](https://www.youtube.com/watch?v=VMj-3S1tku0), highly recommended!)*
 
@@ -47,18 +50,20 @@ SmolML uses the `Value` class to implement Automatic Differentiation.
 
 **What is a `Value`?**
 
-There are several ways to implement this DAG structure. We'll be following the same `Value` class approach that Karpathy uses in his video, with just a few small differences.
+There are several ways to implement this DAG structure. We'll be following the same `Value` class approach that Karpathy uses in his video, in order to have a foundation for our library. Don't worry, we will build the rest of the components by ourselves, but this serves as an awesome starting point!
 
-Let's think about what each node in our DAG actually needs to keep track of. Looking back at the previous image, what information does each node hold? We need a class that can handle these four essential things:
+Let's think about what each node in our DAG actually needs to keep track of. Looking back at the previous image, what information does each node hold? We need a class `Value` that can handle these four essential things:
 
 1. Each node needs to remember the current **numerical result** of whatever computation it represents
-2. We need to store how much this node contributes to the final value, which means, its **gradient with respect to the loss** (this gets filled in during backpropagation)
+2. We need to store how much this node contributes to the final value, which means, its **gradient with respect to the loss** (this will get filled in during backpropagation)
 3. Each node should know what **mathematical operation** created it in order to correctly compute its gradient
 4. Since we'll need to traverse backwards from the final output all the way to the original inputs during backpropagation, each node must **maintain links to the `Value` objects that were used to create it**
 
 Think of a `Value` object as a smart container for a single number (a scalar). It doesn't just hold the number; it prepares for gradient calculations. It stores:
 1.  `data`: The actual numerical value (e.g., 5.0, -3.2).
 2.  `grad`: The gradient of the *final output* of our entire computation graph with respect to *this* specific `Value`'s data. It starts at 0 and gets filled during backpropagation.
+
+Can you build a class that does this? It does not need to be 100% implemented yet, but try to do a bit of a sketch. Remember we are showing the process in Python but you can do this in any language you want to! 
 
 **Building the Calculation Trail (Computational Graph)**
 
@@ -101,17 +106,17 @@ After calling `.backward()`, `a.grad`, `b.grad`, and `c.grad` hold the gradients
 
 > **IMPORTANT NOTE**: `MLArray` is by far the most complex class of the library. If you are implementing this library by yourself while following along, I recommend just copying the provided `mlarray.py` for now, and make your own implementation at the end, as making it from scratch will probably take you a lot of time (and headaches!).
 
-While `Value` objects handle the core AutoDiff for single numbers, machine learning thrives on vectors, matrices, and higher-dimensional tensors. We need an efficient way to manage collections of these smart Value objects. This is the job of the MLArray class.
+While `Value` objects handle the core AutoDiff for single numbers, machine learning thrives on vectors, matrices, and higher-dimensional tensors. We need an efficient way to manage collections of these smart Value objects. This is the job of the `MLArray` class.
 
 What is an `MLArray`?
 
-Think of `MLArray` as an N-dimensional array (like NumPy arrays, but built from scratch here). It can be a list (1D), a list-of-lists (2D matrix), or nested deeper for higher dimensions. It's made in Python, so don't expect a high-performance implementation.
+Think of `MLArray` as an N-dimensional array (like NumPy arrays! but built from scratch here). It can be a list (1D), a list-of-lists (2D matrix), or nested deeper for higher dimensions. As we are implementing it in Python, don't expect a high-performance implementation.
 
 <div align="center">
   <img src="https://github.com/user-attachments/assets/29606bb9-fa55-457c-b2ac-120596aebc11" width="600">
 </div>
 
-The crucial difference from a standard Python list is that every number you put into an MLArray is automatically converted into a `Value` object. This happens recursively in the `_process_data` method during initialization.
+The crucial difference from a standard Python list / list of lists is that every number you put into an MLArray is automatically converted into a `Value` object. This happens recursively in a `_process_data` method during initialization.
 
 ```python
 # Creates a 2x2 MLArray; 1.0, 2.0, 3.0, 4.0 are now Value objects
@@ -124,11 +129,13 @@ This ensures that any calculations performed using the `MLArray` will automatica
 
 The idea of `MLArray` is to support many standard numerical operations, designed to work seamlessly with the underlying `Value` objects:
 
-- **Element-wise operations**: `+`, `-`, `*`, `/`, `**` (power), `exp()`, `log()`, `tanh()`, etc.. When you add two `MLArray`s, the library iterates through corresponding elements and performs the `Value.__add__` (or the corresponding operation, like `__mul__` for multiplication, and so on) operation on each pair (handled by `_element_wise_operation`). This builds the graph element by element.
+- **Element-wise operations**: `+`, `-`, `*`, `/`, `**` (power), `exp()`, `log()`, `tanh()`, etc. When you add two `MLArray`s, the library iterates through corresponding elements and performs the `Value.__add__` (or the corresponding operation, like `__mul__` for multiplication, and so on) operation on each pair (handled by `_element_wise_operation` function). This builds the graph element by element.
 - **Matrix Multiplication**: `matmul()` or the `@` operator. This performs the dot product logic, correctly combining the underlying `Value` multiplications and additions to construct the appropriate graph structure.
 - **Reductions**: `sum()`, `mean()`, `max()`, `min()`, `std()`. These operations aggregate `Value` objects across the array or along specified axes, again building the graph correctly.
 - **Shape Manipulation**: `transpose()` (or `.T`), `reshape()`. These rearrange the `Value` objects into different array shapes without changing the objects themselves, preserving the graph connections.
 - **Broadcasting**: Operations between arrays of different but compatible shapes (e.g., adding a vector to each row of a matrix) are handled automatically, figuring out how to apply operations element-wise based on broadcasting rules (`_broadcast_shapes`, `_broadcast_and_apply`).
+
+Each of these operations has its own quirks and complications. If you want to build these by yourself, have patience and use NumPy as a reference to check if you're doing things right!
 
 **Getting Gradients for Arrays**
 
