@@ -4,7 +4,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import unittest
 import numpy as np
-from smolml.core.ml_array import MLArray, randn, ones
+from smolml.core.ml_array import MLArray, randn
 import matplotlib
 matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
@@ -175,6 +175,149 @@ class TestRegressionVisualization(unittest.TestCase):
         self.assertIsNotNone(predictions)
         self.assertGreater(len(predictions), 0)
         self.assertLess(final_loss, 1.0)  # Assuming convergence
+        
+    def test_polynomial_regression_multidegree(self):
+        """Test polynomial regression with different degrees"""
+        print("\nTesting Polynomial Regression with Multiple Degrees...")
+        X, y = self.generate_nonlinear_data()
+        
+        # Test with degree 3
+        model_deg3 = PolynomialRegression(
+            input_size=1,
+            degree=3,
+            loss_function=losses.mse_loss,
+            optimizer=optimizers.SGD(learning_rate=0.05),
+            initializer=initializers.XavierUniform()
+        )
+
+        print("\nDegree 3 Model:")
+        print(model_deg3)
+        predictions_deg3, final_loss_deg3 = self.train_and_visualize(
+            model_deg3, X, y, 'Polynomial Regression (Degree 3): Data vs Predictions'
+        )
+        
+        # Test with degree 4
+        model_deg4 = PolynomialRegression(
+            input_size=1,
+            degree=4,
+            loss_function=losses.mse_loss,
+            optimizer=optimizers.SGD(learning_rate=0.03),
+            initializer=initializers.XavierUniform()
+        )
+
+        print("\nDegree 4 Model:")
+        print(model_deg4)
+        predictions_deg4, final_loss_deg4 = self.train_and_visualize(
+            model_deg4, X, y, 'Polynomial Regression (Degree 4): Data vs Predictions'
+        )
+        
+        # Basic assertions
+        self.assertIsNotNone(predictions_deg3)
+        self.assertIsNotNone(predictions_deg4)
+        self.assertLess(final_loss_deg3, 1.0)
+        self.assertLess(final_loss_deg4, 1.0)
+        
+        print(f"\nComparison:")
+        print(f"Degree 3 Final Loss: {final_loss_deg3:.6f}")
+        print(f"Degree 4 Final Loss: {final_loss_deg4:.6f}")
+
+    def test_polynomial_regression_cubic_data(self):
+        """Test polynomial regression on cubic data"""
+        print("\nTesting Polynomial Regression on Cubic Data...")
+        
+        # Generate cubic data: y = 2x³ - x² + 3x + 1
+        X = randn(30, 1)
+        y = X * X * X * 2 - X * X + X * 3 + 1 + randn(30, 1) * 0.2
+        
+        model = PolynomialRegression(
+            input_size=1,
+            degree=3,
+            loss_function=losses.mse_loss,
+            optimizer=optimizers.SGD(learning_rate=0.05),
+            initializer=initializers.XavierUniform()
+        )
+
+        print(model)
+        predictions, final_loss = self.train_and_visualize(
+            model, X, y, 'Polynomial Regression (Cubic): Data vs Predictions'
+        )
+        
+        # Basic assertions
+        self.assertIsNotNone(predictions)
+        self.assertGreater(len(predictions), 0)
+        self.assertLess(final_loss, 2.0)
+
+    def test_polynomial_regression_multifeature(self):
+        """Test polynomial regression with multiple input features"""
+        print("\nTesting Polynomial Regression with Multiple Features...")
+        
+        # Generate 2-feature data: y = 2x₁ + 3x₂ + x₁² + x₁x₂
+        X_1 = randn(30, 1)
+        X_2 = randn(30, 1)
+        
+        # Concatenate features
+        X_data = []
+        y_data = []
+        for i in range(30):
+            x1 = X_1.data[i][0].data
+            x2 = X_2.data[i][0].data
+            X_data.append([x1, x2])
+            y_val = 2*x1 + 3*x2 + x1*x1 + x1*x2 + np.random.randn()*0.1
+            y_data.append([y_val])
+        
+        X = MLArray(X_data)
+        y = MLArray(y_data)
+        
+        model = PolynomialRegression(
+            input_size=2,
+            degree=2,
+            loss_function=losses.mse_loss,
+            optimizer=optimizers.SGD(learning_rate=0.05),
+            initializer=initializers.XavierUniform()
+        )
+
+        print(model)
+        
+        # Train without visualization (since we can't easily plot 2D input)
+        losses = model.fit(X, y, iterations=self.iterations, verbose=True, print_every=10)
+        
+        # Print final parameters
+        print("\nFinal Parameters:")
+        print("Weights:", model.weights.data)
+        print("Bias:", model.bias.data)
+        print(f"Final Loss: {losses[-1]:.6f}")
+        
+        # Basic assertions
+        self.assertLess(losses[-1], 1.0)
+        print("\n✓ Multi-feature polynomial regression converged successfully!")
+
+    def test_polynomial_overfitting(self):
+        """Test and visualize overfitting with high degree polynomial"""
+        print("\nTesting Polynomial Overfitting (High Degree)...")
+        
+        # Generate simple quadratic data with noise
+        X = randn(15, 1)  # Smaller dataset
+        y = X * X * 2 + randn(15, 1) * 0.5  # More noise
+        
+        # Use very high degree
+        model = PolynomialRegression(
+            input_size=1,
+            degree=6,
+            loss_function=losses.mse_loss,
+            optimizer=optimizers.SGD(learning_rate=0.01),
+            initializer=initializers.XavierUniform()
+        )
+
+        print(model)
+        predictions, final_loss = self.train_and_visualize(
+            model, X, y, 'Polynomial Regression (Degree 6 - Overfitting): Data vs Predictions'
+        )
+        
+        print("\n⚠ Note: High degree polynomial may show overfitting behavior")
+        print(f"Final Loss: {final_loss:.6f}")
+        
+        # Basic assertions
+        self.assertIsNotNone(predictions)
 
 if __name__ == '__main__':
     unittest.main()

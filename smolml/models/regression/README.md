@@ -180,7 +180,13 @@ And that's it! We now have a working linear regression model. Feel free to exper
 
 ### `PolynomialRegression`
 
-What if the relationship isn't a straight line? Polynomial Regression extends linear regression by fitting a polynomial curve (e.g., $y \approx w_2 x^2 + w_1 x + b$) to the data.
+In reality, data *usually* is not represented by a straight line. In these cases, we can use **Polynomial Regression**. Polynomial Regression extends linear regression by fitting a polynomial curve to the data. For example:
+
+$$y \approx w_2 x^2 + w_1 x + b$$
+
+One aspect of our equation to take into account is the **degree**. The degree will be the highest number to which each of our features (x) is powered to. Despite being more accurate, one disadvantage of this regression type is its scaling complexity whenever we add more features. Take a look at this two-features example:
+
+$$y \approx w_1​x_1​+w_2​x_2​+w_3​x_1^2​+w_4​x_2^2​+w_5​x_1​x_2​+b$$
 
 * **Implementation (`regression.py`)**:
     * Also inherits from `Regression`.
