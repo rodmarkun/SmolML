@@ -1,5 +1,5 @@
 matplotlib==3.9.2
-numpy==2.1.3
+numpy>=1.26.0,<2.1.0
 scikit_learn==1.5.2
 setuptools==75.3.0
 tensorflow==2.18.0

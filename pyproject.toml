@@ -7,7 +7,7 @@ name = "SmolML"
 version = "0.1.0"
 description = "A small machine learning library built from scratch for educational purposes"
 readme = "README.md"
-requires-python = ">=3.7"
+requires-python = ">=3.10"
 license = {text = "MIT"}
 authors = [
     {name = "Pablo Rodríguez", email = "rodmarprogrammer@gmail.com"},
