@@ -9,7 +9,9 @@ While deep neural networks offer immense power, simpler models like Linear Regre
 The goal in regression is to find a mathematical function that maps input features (like the square footage of a house) to a continuous output (like its price). This function has internal parameters (often called **weights** or coefficients, and a **bias** or intercept) that determine its exact shape.
 
 <div align="center">
-  <img src="https://github.com/user-attachments/assets/79874cec-8650-4628-af1f-ca6fdc4debe5" width="600">
+
+  ![Linear Regression Visualization](../../../images/LinearRegression.png)
+
 </div>
 But how does it actually *predict* values?
 
@@ -147,7 +149,9 @@ Here's how we fit all of that in the implementation:
 ## Specific Models Implemented
 
 <div align="center">
-  <img src="https://github.com/user-attachments/assets/8b282ca1-7c17-460d-a64c-61b0624627f9" width="600">
+
+  ![Regression models comparison](../../../images/RegressionModelsComparison.png)
+
 </div>
 
 ### `LinearRegression`
@@ -188,22 +192,133 @@ One aspect of our equation to take into account is the **degree**. The degree wi
 
 $$y \approx w_1​x_1​+w_2​x_2​+w_3​x_1^2​+w_4​x_2^2​+w_5​x_1​x_2​+b$$
 
-* **Implementation (`regression.py`)**:
-    * Also inherits from `Regression`.
-* **The Core Idea**: Instead of directly fitting `X` to `y`, it first *transforms* the input features `X` into polynomial features (e.g., adding $X^2$, $X^3$, etc.) and then applies a standard *linear regression* model to these *new, transformed* features.
-* **Initialization (`__init__`)**:
-    * Takes an additional `degree` argument, specifying the highest power to include in the feature transformation (e.g., `degree=2` means include $X$ and $X^2$).
-    * It calls the base class `__init__`, but the `input_size` passed to the base class is effectively the number of *polynomial features*, not the original number of features. The weights will correspond to these transformed features.
-* **Feature Transformation (`transform_features`)**:
-    * This crucial method takes the original input `X` and generates the new polynomial features. For an input `X` and `degree=d`, it calculates $X, X^2, \dots, X^d$ using `MLArray` operations (like element-wise multiplication `*`) and concatenates them into a new `MLArray`. This ensures the transformation is also potentially part of the graph if needed (though often it's pre-calculated).
-* **Prediction (`predict`)**:
-    1.  It first calls `X_poly = self.transform_features(X)` to get the polynomial features.
-    2.  Then, it performs a standard linear prediction using these transformed features: `return X_poly @ self.weights + self.bias`. The `self.weights` here correspond to the coefficients of the polynomial terms.
-* **Training (`fit`)**:
-    * It overrides the base `fit` method slightly.
-    1.  Before the main loop, it transforms the entire training input `X` into `X_poly = self.transform_features(X)`.
-    2.  It then calls the *base class's* `fit` method (`super().fit(...)`) but passes `X_poly` (instead of `X`) as the input data.
-    * The inherited `fit` method then proceeds as usual, calculating loss based on the predictions from `X_poly`, backpropagating gradients through the linear prediction part *and* the feature transformation step, and updating the weights associated with the polynomial terms.
+As you can see, the equation grows significantly more complex as we increase the degree. The number of terms grows **polynomially** with the number of features (specifically, it follows the formula for **combinations with replacement**). This causes polynomial regression to be somewhat unstable, especially for higher-degree polynomials, we will see this later in the tests!
+
+For the implementation, we'll use our `Regression` class as a base and make some modifications to create our `PolynomialRegression`.
+
+The main operation we need to implement is a way to calculate each **term** of the equation based on the original *number of features* and the specified *degree*. Each of these terms will become our **new features**. In the equation above, we'd have the following terms or features:
+- $x_1$
+- $x_2$
+- $x_1x_1 = x_1²$
+- $x_2x_2 = x_2²$
+- $x_1x_2$
+
+The key for calculating this is in the `generate_combinations` method (this one could be a leetcode problem!).This method calculates all combinations of feature indices up to a given degree, so we can easily create these features. For example, for 2 features and degree 2, we'd output: `[[0], [1], [0,0], [0,1], [1,1]]`. If our features are [$x_1$, $x_2$​], we'd have the recipe for creating all the terms from above!
+
+Try creating a function that uses recursion to generate outputs like these based on the number of features and degree.
+
+In our case, we implemented it like this:
+
+```python
+def generate_combinations(self, n_features: int, degree: int):
+    """
+    Generate all combinations of feature indices up to given degree.
+    For 2 features and degree 2: [[0], [1], [0,0], [0,1], [1,1]]
+    """
+    result = []
+    def obtain_combination(curr_combination, remaining_degree, min_idx):
+        if remaining_degree == 0:
+            result.append(curr_combination)
+            return
+        
+        for i in range(min_idx, n_features):
+            obtain_combination(curr_combination + [i], remaining_degree - 1, i)
+        
+    for d in range(1, degree + 1):
+        obtain_combination([], d, 0)
+        
+    return result
+```
+
+The total number of new features will be the length of the output from the previous function:
+
+```python
+def _calculate_num_features(self, n_features, degree):
+    """
+    Calculate number of polynomial features.
+    """
+    return len(self.generate_combinations(n_features, degree))
+```
+
+And this is the number of features we'll use to initialize our original `Regression` class!
+
+```python
+def __init__(self, input_size: int, degree: int, loss_function: callable = losses.mse_loss, optimizer: optimizers.Optimizer = optimizers.SGD, initializer: initializers.WeightInitializer = initializers.XavierUniform):
+    """
+    Initializes polynomial model with degree and training parameters.
+    """
+    self.original_input_size = input_size  # Store the original number of features
+    self.degree = degree
+    
+    # Calculate number of polynomial features (including interactions)
+    num_poly_features = self._calculate_num_features(input_size, degree)
+    
+    # Initialize with the total number of polynomial features
+    super().__init__(num_poly_features, loss_function, optimizer, initializer)
+```
+
+Now we need a method to actually transform our inputs (for whenever we try to predict something) based on the output of `generate_combinations`. We achieve this in the `transform_features` method:
+
+```python
+def transform_features(self, X):
+    """
+    Creates polynomial features up to specified degree including interactions.
+    For input X with 2 features and degree 2:
+    - Input: [[x1, x2]]
+    - Output: [[x1, x2, x1^2, x1*x2, x2^2]]
+    """
+    if not isinstance(X, MLArray):
+        X = MLArray(X)
+        
+    n_samples = X.shape[0]
+    n_features = X.shape[1] if len(X.shape) > 1 else 1
+    
+    feature_combinations =self.generate_combinations(n_features, self.degree)
+    
+    new_data = []
+    for sample_idx in range(n_samples):
+        sample_poly_features = []
+        
+        for comb in feature_combinations:
+            feature_value = MLArray(1.0)
+            
+            for feature_idx in comb:
+                if len(X.shape) > 1:
+                    feature_val = X.data[sample_idx][feature_idx]
+                else:
+                    feature_val = X.data[sample_idx]
+                    
+                feature_value *= feature_val
+            
+            sample_poly_features.append(feature_value.data if isinstance(feature_value, MLArray) else feature_value)
+            
+        new_data.append(sample_poly_features)
+        
+    return MLArray(new_data)
+```
+
+Finally! The only thing left is incorporating `transform_features` into our `predict` method. Since `predict` is already used inside the `fit` method, we don't need to change `fit`, it will automatically work with what we implemented in the `Regression` base class!
+
+```python
+def predict(self, X):
+    """
+    Makes predictions after transforming features to polynomial form.
+    """
+    if not isinstance(X, MLArray):
+            raise TypeError(f"Input data must be MLArray, not {type(X)}")
+    X_poly = self.transform_features(X)
+    return X_poly @ self.weights + self.bias
+```
+
+And that's it! We can now use `PolynomialRegression` to fit non-linear data! 
+
+## Run tests!
+
+Feel free to run `tests/regression_tests.py` to see how these regression models work with some random toy data! Each execution is different, so run them several times. You can see how we fit the data epoch by epoch using the interactive slider.
+
+As you'll see, sometimes `PolynomialRegression`'s higher-degree examples have an exploding loss instead of a minimizing one! This is because polynomial regression is way more sensitive to random weight initialization, feature magnitudes, and learning rate changes.
+
+Higher polynomial terms amplify bad initialization: if $w_2$ starts too large, then $w_2x^2$ can quickly explode. We'll stop with regression here, but feel free to research how to control and minimize these explosions. For now, let's move on to a more powerful model: Neural Networks!
 
 ## Example Usage
 
@@ -247,6 +362,84 @@ prediction = model.predict(X_new)
 print(f"\nPrediction for {X_new.to_list()}: {prediction.to_list()}")
 ```
 
-## Regression wrap-up
+And this is the usage of `PolynomialRegression`:
 
-These regression classes showcase how the foundational `Value` and `MLArray` we implemented can be used to design and train classic machine learning models! In just a few lines of code! Isn't that cool?
+```python
+from smolml.models.regression import PolynomialRegression
+from smolml.core.ml_array import MLArray, randn
+import smolml.utils.optimizers as optimizers
+import smolml.utils.losses as losses
+import smolml.utils.initializers as initializers
+
+# Generate non-linear sample data (e.g., quadratic relationship)
+# y ≈ 2x² + 3x + 1 + noise
+X_data = [[-2.0], [-1.0], [0.0], [1.0], [2.0]]
+y_data = [[3.0], [0.5], [1.0], [6.0], [15.0]]
+
+# Convert to MLArray
+X = MLArray(X_data)
+y = MLArray(y_data)
+
+# Initialize polynomial regression model with degree 2
+# This will create features: [x, x²]
+model = PolynomialRegression(
+    input_size=1,
+    degree=2,
+    optimizer=optimizers.SGD(learning_rate=0.05),
+    loss_function=losses.mse_loss,
+    initializer=initializers.XavierUniform()
+)
+
+# Print initial model summary
+print(model)
+
+# Train the model
+print("\nStarting training...")
+losses_history = model.fit(X, y, iterations=200, verbose=True, print_every=20)
+print("Training complete.")
+
+# Print final model summary
+print(model)
+
+# Make predictions on new data
+X_new = MLArray([[3.0]])
+prediction = model.predict(X_new)
+print(f"\nPrediction for {X_new.to_list()}: {prediction.to_list()}")
+
+# Example with multiple features and interactions
+# Generate 2-feature data: y = 2x₁ + 3x₂ + x₁² + x₁x₂ + noise
+# For 2 features with degree 2, it creates: [x₁, x₂, x₁², x₁x₂, x₂²]
+import numpy as np
+
+X_1 = randn(30, 1)
+X_2 = randn(30, 1)
+
+X_data = []
+y_data = []
+for i in range(30):
+    x1 = X_1.data[i][0].data
+    x2 = X_2.data[i][0].data
+    X_data.append([x1, x2])
+    y_val = 2*x1 + 3*x2 + x1*x1 + x1*x2 + np.random.randn()*0.1
+    y_data.append([y_val])
+
+X_multi = MLArray(X_data)
+y_multi = MLArray(y_data)
+
+model_multi = PolynomialRegression(
+    input_size=2,
+    degree=2,
+    optimizer=optimizers.SGD(learning_rate=0.05),
+    loss_function=losses.mse_loss,
+    initializer=initializers.XavierUniform()
+)
+
+print("\n" + "="*50)
+print("Training multi-feature polynomial regression...")
+print(model_multi)
+model_multi.fit(X_multi, y_multi, iterations=200, verbose=True, print_every=20)
+
+X_test = MLArray([[1.5, 2.0]])
+pred_multi = model_multi.predict(X_test)
+print(f"\nPrediction for {X_test.to_list()}: {pred_multi.to_list()}")
+```

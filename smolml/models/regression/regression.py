@@ -200,14 +200,6 @@ class PolynomialRegression(Regression):
             
         return MLArray(new_data)
 
-    def predict(self, X):
-        """
-        Makes predictions after transforming features to polynomial form.
-        """
-        if not isinstance(X, MLArray):
-                raise TypeError(f"Input data must be MLArray, not {type(X)}")
-        X_poly = self.transform_features(X)
-        return X_poly @ self.weights + self.bias
 
     def fit(self, X, y, iterations: int = 100, verbose: bool = True, print_every: int = 1):
         """
@@ -224,7 +216,7 @@ class PolynomialRegression(Regression):
     def generate_combinations(self, n_features: int, degree: int):
         """
         Generate all combinations of feature indices up to given degree.
-        For 2 features and degree 2: [(0,), (1,), (0,0), (0,1), (1,1)]
+        For 2 features and degree 2: [[0], [1], [0,0], [0,1], [1,1]]
         """
         result = []
         def obtain_combination(curr_combination, remaining_degree, min_idx):

@@ -10,7 +10,11 @@ Think about teaching a model to recognize a cat in a photo. The model makes a pr
 
 The goal is to adjust our computer's parameters to *minimize* this loss. But how do we know *which way* to adjust each parameter? Should we increase it? Decrease it? By how much?
 
-![Figure-3-37-Gradient-descent-Algorithm-illustration(1)](https://github.com/user-attachments/assets/93e2df5b-5f02-43d1-a4b9-3e9daeb81a9a)
+<div align="center">
+
+![Gradient Descent Visualization](../../images/GradientDescent.png)
+
+</div>
 
 This is where **gradients** come in. The gradient of the loss function with respect to a specific parameter tells us the "slope" of the loss at that parameter's current value (orange arrow in the image above!). It points in the direction of the *steepest increase* in the loss. So, if we want to *decrease* the loss, we nudge the parameter in the *opposite* direction of the gradient multiplying by $-\alpha$, where $\alpha$ is our **learning rate** (this multiplication is represented in the purple arrow). Basically, if the gradient points to the left, we want our model to go to the right and vice-versa. That's why we use a negative learning rate! The size of the gradient also tells us how sensitive the loss is to that parameter: a larger gradient means a bigger adjustment might be needed.
 
@@ -35,7 +39,9 @@ But modern neural networks are *vastly* more complex. They are essentially giant
 **Automatic Differentiation (AutoDiff)** is the solution. It's a **technique** where the computer itself keeps track of every single mathematical operation performed, building a computational graph. We will call this the `forward` phase, as information travels from the beggining to the end of the graph. Then, by applying the chain rule systematically backwards through this graph (a process called **backpropagation**), it can efficiently compute the gradient of the final output (the loss) with respect to every single input and parameter involved. We will call this the `backward` phase, take a look at the next image!
 
 <div align="center">
-  <img src="https://github.com/user-attachments/assets/75372083-69b3-47b4-959d-609d7f426751" width="600">
+
+  ![Automatic Differentitation DAG](../../images/Forward.png)
+
 </div>
 
 As you can see in the previous image, we can use a **Directed Acyclic Graph** (DAG) where each node represents a value in our computation. The edges between nodes show us which values are used as inputs to compute other values, and what operation connects them (like addition, multiplication, etc.).
@@ -113,7 +119,9 @@ What is an `MLArray`?
 Think of `MLArray` as an N-dimensional array (like NumPy arrays! but built from scratch here). It can be a list (1D), a list-of-lists (2D matrix), or nested deeper for higher dimensions. As we are implementing it in Python, don't expect a high-performance implementation.
 
 <div align="center">
-  <img src="https://github.com/user-attachments/assets/29606bb9-fa55-457c-b2ac-120596aebc11" width="600">
+
+  ![Array Dimensions Visualization](../../images/ArrayDims.png)
+
 </div>
 
 The crucial difference from a standard Python list / list of lists is that every number you put into an MLArray is automatically converted into a `Value` object. This happens recursively in a `_process_data` method during initialization.

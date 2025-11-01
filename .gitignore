@@ -1,6 +1,7 @@
 __pycache__
 venv
 *.png
+!images/*.png
 SmolML.egg-info
 build
 .venv
