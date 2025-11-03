@@ -173,29 +173,3 @@ class NeuralNetwork:
             + "\n".join(memory_info)
             + f"\n{separator}\n"
         )
-
-def example_neural_network():
-    # Example usage
-    input_size = 2
-    hidden_size = 32
-    output_size = 1
-
-    # Create the neural network
-    nn = NeuralNetwork([
-        DenseLayer(input_size, hidden_size, activation.relu),
-        DenseLayer(hidden_size, output_size, activation.tanh)
-    ], losses.mse_loss, optimizers.AdaGrad(learning_rate=0.1))
-
-    # Generate some dummy data
-    X = [[0, 0], [0, 1], [1, 0], [1, 1]]
-    y = [[0], [1], [1], [0]]
-
-    print(nn)
-    # Train the network
-    nn.train(X, y, epochs=100)
-
-    y_pred = nn.forward(MLArray(X))
-    print(y_pred)
-
-if __name__ == '__main__':
-    example_neural_network()
