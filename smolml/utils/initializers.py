@@ -33,6 +33,27 @@ class WeightInitializer:
        flat_array = [generator() for _ in range(total_elements)]
        return MLArray(flat_array).reshape(*dims)
 
+class RandomUniform(WeightInitializer):
+   """
+   Simple random uniform initialization.
+   Generates weights from uniform distribution in range [-limit, limit].
+   """
+   @staticmethod
+   def initialize(*dims, limit=1.0):
+       """
+       Initializes weights using uniform distribution in range [-limit, limit].
+       
+       Args:
+           *dims: Dimensions of the weight array
+           limit: Upper bound for uniform distribution (default: 1.0)
+       
+       Examples:
+           RandomUniform.initialize(3, 4)  # 3x4 matrix with values in [-1, 1]
+           RandomUniform.initialize(3, 4, limit=0.5)  # 3x4 matrix with values in [-0.5, 0.5]
+       """
+       dims = RandomUniform._process_dims(dims)
+       return RandomUniform._create_array(lambda: random.uniform(-limit, limit), dims)
+
 class XavierUniform(WeightInitializer):
    """
    Xavier/Glorot uniform initialization.

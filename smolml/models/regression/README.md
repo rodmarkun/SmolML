@@ -48,7 +48,7 @@ This iterative process allows the regression model to "learn" the underlying rel
 
 To streamline the implementation of different regression algorithms, in SmolML we will make a `Regression` base class (in `regression.py`). This class handles the common structure and the training loop logic, and it will be the foundation for all of our regression models. Specific models like `LinearRegression` or `PolynomialRegression` (different kinds of regression) will inherit from it.
 
-First off, our model needs to know **how many input features** we're working with from the beginning in order to initialize the correct number of weights. We'll also need a **loss function** for calculating *how wrong we are*. Finally, we'll use an **optimizer** and an **initializer**, just like with all our models. If you don't want to implement those just yet, you can initialize the weights randomly and implement simple gradient descent in the `fit()` method.
+First off, our model needs to know **how many input features** we're working with from the beginning in order to initialize the correct number of weights. We'll also need a **loss function** for calculating *how wrong we are*. Finally, we'll use an **optimizer** and an **initializer**, just like with all our models. This is a design choice from the library, you can implement both directly in the model class.
 
 Next, we need to define a `fit()` method that trains the network based on the input features `X` and the true values `y` (which are `MLArrays`!) for a certain number of `iterations`. We'll also need a `restart()` to reset all gradients in our model (`MLArray` has a method for that, check it out!) 
 
@@ -77,6 +77,8 @@ Here's how we fit all of that in the implementation:
             self.weights = self.initializer.initialize((self.input_size,))
             self.bias = ml_array.ones((1))
     ```
+
+    > NOTE: Yes, we are using initializers and optimizers here, which might be something you have not implemented yet. If you are implementing your own library, you are free to choose here: 1. Just use the implementation we provide and focus only in the current section. 2. Go to [SmolML - The utility room!](https://github.com/rodmarkun/SmolML/tree/main/smolml/utils) section, see how they are implemented and make your own!
 
 * **Training (`fit`)**:
     * This method orchestrates the gradient descent loop described earlier. For a specified number of `iterations`:
