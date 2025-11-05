@@ -5,7 +5,9 @@ Welcome to the neural network section of SmolML! Having established our Value ob
 > **IMPORTANT - WARNING**: As our implementation is made fully in Python, handling the automatic differentiation of an entire neural network is very computationally expensive. If you plan on running an example, we recommend starting with a very small network and then escalate. Creating a too big neural network for your computer might make it freeze 🙂 
 
 <div align="center">
-  <img src="https://github.com/user-attachments/assets/e5315fca-5dd6-4c9c-9cf3-bf46edfbb40c" width="600">
+
+  ![Neural Network Propagation](../../../images/NeuralNetworkPropagation.png)
+  
 </div>
 
 My goal today is to make you understand all that's happening in the image above and to let you create it from scratch! Let's go element by element, starting with the most basic of them.
@@ -15,7 +17,9 @@ My goal today is to make you understand all that's happening in the image above 
 At the heart of a neural network is the neuron (or node). Think of it as a small computational unit that receives several inputs, processes them, and produces a single output (if you've ever played Factorio, neural networks are just a fabric of converting some inputs into outputs).
 
 <div align="center">
-  <img src="https://github.com/user-attachments/assets/2f95fdfe-1676-4a0b-9e10-95ecdf9155b6" width="600">
+
+  ![Single Neuron Model](../../../images/SingleNeuron.png)
+  
 </div>
 
 Here's what a neuron conceptually does:
@@ -113,10 +117,6 @@ Finally, _how do we train this thing?_ _where does the `fit()` method go in here
 Great! That concludes our implementation of layers for now. Let's keep going to see how everything fits together in a **neural network**!
 
 ## Neural Networks: Stacking Layers
-
-<div align="center">
-  <img src="https://github.com/user-attachments/assets/3979a284-0b29-4110-b6c5-dfe1a13f50b9" width="600">
-</div>
 
 The true power of neural networks comes from **stacking multiple layers**. The output of one layer becomes the input to the next. This allows the network to learn hierarchical features: earlier layers might learn simple patterns (like edges in an image), while later layers combine these to learn more complex concepts (like shapes or objects).
 
