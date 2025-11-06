@@ -1,25 +1,106 @@
 # SmolML - Tree Models: Decisions, Decisions!
 
-Welcome to the *branch* of SmolML dealing with **Tree-Based Models**! Unlike the models we saw in **Regression** (which rely on smooth equations and gradient descent), Decision Trees and their powerful sibling, Random Forests, make predictions by learning a series of explicit **decision rules** from the data. Think of it like building a sophisticated flowchart to classify an email as spam or not spam, or to predict a house price.
+Welcome to the *branch* of SmolML dealing with **Tree-Based Models**! Unlike the models we saw in `Regression` (which rely on smooth equations and gradient descent), Decision Trees and their powerful sibling, Random Forests, make predictions by learning a series of explicit **decision rules** from the data. Think of it like building a sophisticated flowchart to classify an email as spam or not spam, or to predict a house price.
 
-These models are incredibly versatile, handling both **classification** (predicting categories) and **regression** (predicting numerical values) tasks. They don't need feature scaling and can capture complex, non-linear relationships. Let's dive into how they work!
+Instead of finding a smooth mathematical function that fits the data, trees ask a series of yes/no questions. "_Is the email subject line longer than 50 characters?_" → "_Does it contain the word 'FREE'?_" → "_Was it sent after midnight?_" Each answer narrows down the prediction until we reach a final decision. This makes them incredibly interpretable as you can literally trace the path the model took to make a prediction!
 
-## Decision Trees: The Flowchart Approach
+These models are incredibly versatile, handling both **classification** (predicting categories) and **regression** (predicting numerical values) tasks. They **don't need feature scaling** and can capture complex, non-linear relationships. Let's dive into how they work!
+
+## Decision Trees
 
 Imagine you're trying to decide if you should play tennis today. You might ask:
 1.  Is the outlook sunny?
-    * Yes -> Is the humidity high?
+    * Yes -> Is it scorching hot?
         * Yes -> Don't Play
         * No -> Play!
     * No -> Is it raining?
         * Yes -> Don't Play
         * No -> Play!
 
-That's the essence of a **Decision Tree**! It's a structure that recursively splits the data based on simple questions about the input features.
+That's the essence of a **Decision Tree**! It's a structure that recursively splits the data based on simple questions about the input features. But how do we actually _train_ something like this?
+
+We could model each of these decisions as a `DecisionNode`. Imagine it! We take today's data. Based on that data we choose **a feature to split on**. For example, in the first decision we check the outlook of the day, while in the next one we might check temperature or a boolean indicating rain.
+
+Of course, we need some **threshold** to split our decisions. For example, a British person might find 30°C outrageously hot, or 40°C for a Spanish one. But that threshold is what determines whether we play or not.
+
+Each decision might lead to other decisions, so we should store the **possible decisions** down our tree. Basically, other `DecisionNode`s that derive from the current one.
+
+And finally, we need some **value** for the final (leaf) decisions. In this case, we might assume that if we play, the value is `1`, and if we don't, it's `0`.
+
+We can implement a simple class based on this!
+
+```python
+class DecisionNode:
+    """
+    Node in decision tree that handles splitting logic.
+    Can be either internal node (with split rule) or leaf (with prediction).
+    """
+    def __init__(self, feature_idx=None, threshold=None, left=None, right=None, value=None):
+        self.feature_idx = feature_idx  # Index of feature to split on
+        self.threshold = threshold      # Value to split feature on
+        self.left = left               # Left subtree (feature <= threshold)
+        self.right = right             # Right subtree (feature > threshold)
+        self.value = value             # Prediction value (for leaf nodes)
+
+    def __repr__(self):
+        if self.value is not None:
+            return f"Leaf(value={self.value})"
+        return f"Node(feature={self.feature_idx}, threshold={self.threshold:.4f})"
+```
 
 <div align="center">
   <img src="https://github.com/user-attachments/assets/0b805169-fa57-4097-80e0-e841ea3246af" width="600">
 </div>
+
+Great! Now we have an object to represent our decisions. But we're missing the most important part: using this as part of a `DecisionTree`. The goal is for the model to automatically learn which feature and threshold to split on from a dataset, eventually reaching leaf nodes with prediction values.
+
+Okay, let's think this through: we need a structure to hold these `DecisionNode`s. These are actually continuously generated during training, so... maybe we should have some kind of limit?
+
+We must ask ourselves: how _big_ do we want our tree to be? Or better yet, how **deep**? That's the main parameter our tree is going to have! A `max_depth` parameter will control how many levels of decisions we allow. A deeper tree can capture more complex patterns but risks overfitting to the training data.
+
+Of course, we need an starting `DecisionNode` that will serve as our **root**, from which all other `DecisionNode`s will be children. But we can save that for later, whenever we start actually training our model.
+
+But depth isn't the only consideration! We also need **stopping criteria** to prevent the tree from making splits that don't help much:
+- What's the **minimum number of samples** a node must have before we even consider splitting it? If a node only has a handful of data points, splitting might not be meaningful.
+- How many **samples should each leaf node contain at minimum**? This ensures our predictions are based on a reasonable amount of data rather than just one or two examples. It's another guard against overfitting, we don't want leaves that memorize individual training examples!
+
+Finally, for implementation purposes, we should know the **task** for which the `DecisionTree` is to be used (_regression_ or _classification_). This determines how we make predictions at leaf nodes: for classification, we typically use the most common class, while for regression, we use the average value of samples in that leaf.
+
+We end up with a constructor like this:
+
+```python
+class DecisionTree:
+    """
+    Decision Tree implementation supporting both classification and regression.
+    Uses binary splitting based on feature thresholds.
+    """
+    def __init__(self, max_depth=None, min_samples_split=2, min_samples_leaf=1, task="classification"):
+        """
+        Initialize decision tree with stopping criteria.
+        
+        max_depth: Maximum tree depth to prevent overfitting
+        min_samples_split: Minimum samples required to split node
+        min_samples_leaf: Minimum samples required in leaf nodes
+        task: "classification" or "regression"
+        """
+        self.max_depth = max_depth
+        self.min_samples_split = min_samples_split
+        self.min_samples_leaf = min_samples_leaf
+        self.task = task
+        self.root = None
+```
+
+Fine, time to train this thing! I hope you like recursivity because boy, we are up to a ride.
+
+When dealing with recursivity, we should first define when is our algorithm going to end:
+- **We reach max depth**: If we've gone as deep as we specified in `max_depth`, we stop. This prevents the tree from becoming too complex and overfitting to the training data.
+- **Too few samples to split**: If the current node has fewer samples than `min_samples_split`, we can't meaningfully split it further. Imagine trying to make a decision based on just one data point, that's just not good.
+- **Too few samples for a leaf**: _Even_ if we split, if either resulting child would have fewer than `min_samples_leaf` samples, we don't bother. This ensures our predictions are based on enough data.
+- **Pure node**: If all samples in the current node have the same label (for classification) or value (for regression), there's no point in splitting further, we've literally splitted it perfectly!
+
+When any of these conditions are true, we create a leaf node with a prediction value. For classification, this is the most common class among the samples in that node. For regression, it's the average value.
+
+Now, if none of these criteria are met, we need to actually split the data. We should define a method that will tell us which is the best **feature** and **threshold** to use. This method should loop over each **feature** and each **threshold** over our data. 
 
 **How it's Built (The `fit` method):**
 
