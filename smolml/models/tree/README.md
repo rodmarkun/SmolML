@@ -1,6 +1,6 @@
 # SmolML - Tree Models: Decisions, Decisions!
 
-Welcome to the *branch* of SmolML dealing with **Tree-Based Models**! Unlike the models we saw in `Regression` (which rely on smooth equations and gradient descent), Decision Trees and their powerful sibling, Random Forests, make predictions by learning a series of explicit **decision rules** from the data. Think of it like building a sophisticated flowchart to classify an email as spam or not spam, or to predict a house price.
+Welcome to the _branch_ of SmolML dealing with **Tree-Based Models**! Unlike the models we saw in `Regression` (which rely on smooth equations and gradient descent), Decision Trees and their powerful sibling, Random Forests, make predictions by learning a series of explicit **decision rules** from the data. Think of it like building a sophisticated flowchart to classify an email as spam or not spam, or to predict a house price.
 
 Instead of finding a smooth mathematical function that fits the data, trees ask a series of yes/no questions. "_Is the email subject line longer than 50 characters?_" → "_Does it contain the word 'FREE'?_" → "_Was it sent after midnight?_" Each answer narrows down the prediction until we reach a final decision. This makes them incredibly interpretable as you can literally trace the path the model took to make a prediction!
 
@@ -21,7 +21,7 @@ That's the essence of a **Decision Tree**! It's a structure that recursively spl
 
 We could model each of these decisions as a `DecisionNode`. Imagine it! We take today's data. Based on that data we choose **a feature to split on**. For example, in the first decision we check the outlook of the day, while in the next one we might check temperature or a boolean indicating rain.
 
-Of course, we need some **threshold** to split our decisions. For example, a British person might find 30°C outrageously hot, or 40°C for a Spanish one. But that threshold is what determines whether we play or not.
+Of course, we need some **threshold** to split our decisions. For example, more than 35°C might be too hot to play tennis (or 25°C if you're British). But that threshold is what determines whether we play or not.
 
 Each decision might lead to other decisions, so we should store the **possible decisions** down our tree. Basically, other `DecisionNode`s that derive from the current one.
 
@@ -49,7 +49,7 @@ class DecisionNode:
 ```
 
 <div align="center">
-  <img src="https://github.com/user-attachments/assets/0b805169-fa57-4097-80e0-e841ea3246af" width="600">
+  <img src="../../../images/DecisionTree.png" alt="Decision Tree Diagram" width="1000">
 </div>
 
 Great! Now we have an object to represent our decisions. But we're missing the most important part: using this as part of a `DecisionTree`. The goal is for the model to automatically learn which feature and threshold to split on from a dataset, eventually reaching leaf nodes with prediction values.
@@ -90,7 +90,7 @@ class DecisionTree:
         self.root = None
 ```
 
-Fine, time to train this thing! I hope you like recursivity because boy, we are up to a ride.
+Fine, time to train this thing! We are going to implement quite a lot of methods for this to work cleanly. The main logic will go into the main recursive method, `_grow_tree`:
 
 When dealing with recursivity, we should first define when is our algorithm going to end:
 - **We reach max depth**: If we've gone as deep as we specified in `max_depth`, we stop. This prevents the tree from becoming too complex and overfitting to the training data.
@@ -98,41 +98,260 @@ When dealing with recursivity, we should first define when is our algorithm goin
 - **Too few samples for a leaf**: _Even_ if we split, if either resulting child would have fewer than `min_samples_leaf` samples, we don't bother. This ensures our predictions are based on enough data.
 - **Pure node**: If all samples in the current node have the same label (for classification) or value (for regression), there's no point in splitting further, we've literally splitted it perfectly!
 
-When any of these conditions are true, we create a leaf node with a prediction value. For classification, this is the most common class among the samples in that node. For regression, it's the average value.
+When any of these conditions are true, we create a leaf node with a prediction value. For classification, this is the most common class among the samples in that node. For regression, it's the average value. We included this logic in the `_leaf_value` method:
 
-Now, if none of these criteria are met, we need to actually split the data. We should define a method that will tell us which is the best **feature** and **threshold** to use. This method should loop over each **feature** and each **threshold** over our data. 
+```python
+def _leaf_value(self, y):
+    """
+    Determines prediction value for leaf node:
+    - Most common class for classification
+    - Mean value for regression
+    """
+    if self.task == "classification":
+        return max(set(y), key=y.count)
+    return sum(y)/len(y)
+```
 
-**How it's Built (The `fit` method):**
+Now, if none of these criteria are met, we need to actually split the data. First we need a method `_split_data` that, given a `feature_idx` and a `threshold`, will split the data into its "left" and "right". This one's easy: 
 
-The magic happens in the `fit` method of the `DecisionTree` class (see `decision_tree.py`). It builds the tree structure, represented by interconnected `DecisionNode` objects, using a process called **recursive partitioning**:
+```python
+def _split_data(self, X, feature_idx, threshold):
+    """
+    Splits data based on feature and threshold.
+    """
+    left_idxs = []
+    right_idxs = []
+    
+    for i, row in enumerate(X):
+        if row[feature_idx] <= threshold:
+            left_idxs.append(i)
+        else:
+            right_idxs.append(i)
+            
+    return left_idxs, right_idxs
+```
 
-1.  **Start with all data:** Begin at the root node with your entire training dataset.
-2.  **Find the Best Question:** The core task is to find the *best* feature and *best* threshold value to split the current data into two groups (left and right branches). What's "best"? A split that makes the resulting groups as "pure" or homogeneous as possible regarding the target variable (e.g., all samples in a group belong to the same class, or have very similar numerical values).
-    * **How? The `_find_best_split` and `_calculate_gain` methods:** The tree tries *every possible split* (each feature, each unique value as a threshold) and evaluates how much "purer" the resulting groups are compared to the parent group.
-        * **For Classification:** It typically uses **Entropy** (a measure of disorder) and calculates the **Information Gain** (how much the entropy decreases after the split). A higher gain means a better split. (See `_information_gain`).
-        * **For Regression:** It typically uses **Variance** or **Mean Squared Error (MSE)** and calculates how much this metric is reduced by the split. A larger reduction means a better split. (See `_mse_reduction`).
-3.  **Split the Data:** Apply the best split found, dividing the data into two subsets.
-4.  **Repeat Recursively:** Treat each subset as a new problem and repeat steps 2 and 3 for the left and right branches, creating child nodes (`_grow_tree` method calls itself).
-5.  **Stop Splitting (Create a Leaf Node):** The recursion stops, and a **leaf node** (a `DecisionNode` with a `value` but no children) is created when certain conditions are met:
-    * The node is perfectly "pure" (all samples belong to the same class/have very similar values - check `_is_pure`).
-    * A predefined `max_depth` is reached.
-    * The number of samples in a node falls below `min_samples_split`.
-    * A potential split would result in a child node having fewer than `min_samples_leaf` samples.
-    * No further split improves purity.
-    These stopping criteria (hyperparameters set during `__init__`) are crucial to prevent the tree from growing too complex and **overfitting** (memorizing the training data instead of learning general patterns).
+We should define a method `_find_best_split` that will tell us which is the best **feature** and **threshold** to use. This method should loop over each **feature** and each **threshold** over our data, constantly making splits and trying to find the best ones. _But wait!_ How do we know how **good** a pair of feature and threshold are? We will do so with a concept named **information gain**, which we will calculate in `_calculate_gain`.
 
-**Making Predictions (The `predict` method):**
+```python
+def _find_best_split(self, X, y):
+    """
+    Finds best feature and threshold for splitting data.
+    Uses information gain for classification, MSE for regression.
+    """
+    best_gain = -float('inf')
+    best_feature = None
+    best_threshold = None
+
+    n_features = len(X[0])
+    
+    for feature_idx in range(n_features):
+        thresholds = sorted(set(row[feature_idx] for row in X))
+        
+        for threshold in thresholds:
+            left_idxs, right_idxs = self._split_data(X, feature_idx, threshold)
+            
+            if len(left_idxs) < self.min_samples_leaf or len(right_idxs) < self.min_samples_leaf:
+                continue
+
+            left_y = [y[i] for i in left_idxs]
+            right_y = [y[i] for i in right_idxs]
+            
+            gain = self._calculate_gain(y, left_y, right_y)
+            
+            if gain > best_gain:
+                best_gain = gain
+                best_feature = feature_idx
+                best_threshold = threshold
+
+    return best_feature, best_threshold
+```
+
+**Gain** (also called **Information Gain**) is a metric used to determine which feature should be used to split the data at each node when building a decision tree. It measures how much a particular split reduces uncertainty or _impurity_ in the dataset. Think of it this way: a good split is one that creates child nodes that are more 'pure' than the parent. If we can separate 'Yes' samples from 'No' samples effectively, we've gained information!
+
+Gain is calculated as the difference between the impurity of the parent node and the weighted average impurity of the child nodes after splitting:
+
+_Gain = Impurity(parent) - Weighted Average of Impurity(children)_
+
+The impurity is commonly measured using **entropy** (for classification) or **variance** (for regression).
+
+- For **classification**: If all samples in a node belong to the same class, entropy is 0 (no uncertainty). If samples are distributed across classes, entropy is maximized. The formula for entropy is:
+
+$$
+H(S) = -Σ(p_i × log₂(p_i))
+$$
+
+    Where $p_i$ is the proportion of samples belonging to class $i$
+
+```python
+def _information_gain_entropy(self, parent, left, right):
+    """
+    Calculates information gain using entropy.
+    """
+    def entropy(y):
+        counts = Counter(y)
+        probs = [count/len(y) for count in counts.values()]
+        return -sum(p * math.log2(p) for p in probs)
+
+    n = len(parent)
+    entropy_parent = entropy(parent)
+    entropy_children = (len(left)/n * entropy(left) + 
+                        len(right)/n * entropy(right))
+    return entropy_parent - entropy_children
+```
+
+Example: If the parent has 50% Yes and 50% No (high entropy), and after splitting you get left child with 90% Yes and right child with 90% No (both low entropy), you've gained a lot of information.
+
+- For **regression**: We will use the _Mean Squared Error_ to measure how spread out the target values are before splitting. The MSE calculates the average squared distance from the mean. If MSE is high, values are scattered. If MSE is low, values are clustered together.
+
+```python
+def _information_gain_mse(self, parent, left, right):
+    """
+    Calculates reduction in MSE.
+    """
+    def mse(y):
+        mean = sum(y)/len(y)
+        return sum((val - mean)**2 for val in y)/len(y)
+
+    n = len(parent)
+    mse_parent = mse(parent)
+    mse_children = (len(left)/n * mse(left) + 
+                len(right)/n * mse(right))
+    return mse_parent - mse_children
+```
+
+If a parent node has values [100, 110, 200, 210] (scattered, high MSE), and splitting gives us [100, 110] and [200, 210] (clustered, low MSE in each), we've successfully reduced variance!
+
+And we will wrap it into a method `_calculate_gain` that routes to the correct function depending on the current task (that's why we stored it when creating the tree!):
+
+```python
+def _calculate_gain(self, parent, left, right):
+    """
+    Calculates gain from split:
+    - Information gain for classification
+    - Reduction in MSE for regression
+    """
+    if self.task == "classification":
+        return self._information_gain_entropy(parent, left, right)
+    return self._information_gain_mse(parent, left, right)
+```
+
+Nice! We now have everything we need to create a tree from some data `X` associated with labels `y` up to a certain `depth`. Taking into account the stopping criteria we defined earlier and the functions we just saw, can you implement this main `_grow_tree` method? :)
+
+Here's our implementation:
+
+```python
+def _grow_tree(self, X, y, depth=0):
+    """
+    Recursively grows tree by finding best splits.
+    """
+    n_samples = len(X)
+    
+    # Check stopping criteria
+    if (self.max_depth is not None and depth >= self.max_depth or 
+        n_samples < self.min_samples_split or 
+        self._is_pure(y)):
+        return DecisionNode(value=self._leaf_value(y))
+
+    # Find best split
+    best_feature, best_threshold = self._find_best_split(X, y)
+    
+    if best_feature is None:  # No valid split found
+        return DecisionNode(value=self._leaf_value(y))
+
+    # Split data
+    left_idxs, right_idxs = self._split_data(X, best_feature, best_threshold)
+    
+    # Check min_samples_leaf
+    if len(left_idxs) < self.min_samples_leaf or len(right_idxs) < self.min_samples_leaf:
+        return DecisionNode(value=self._leaf_value(y))
+
+    # Create child nodes
+    left_X = [X[i] for i in left_idxs]
+    right_X = [X[i] for i in right_idxs]
+    left_y = [y[i] for i in left_idxs]
+    right_y = [y[i] for i in right_idxs]
+
+    left = self._grow_tree(left_X, left_y, depth + 1)
+    right = self._grow_tree(right_X, right_y, depth + 1)
+
+    return DecisionNode(feature_idx=best_feature, threshold=best_threshold, left=left, right=right)
+```
+
+Notice how `_grow_tree` calls itself with `left = self._grow_tree(...)` and `right = self._grow_tree(...)`? Each call builds its own subtree, and when they return, we connect them to the current node. The `depth + 1` parameter ensures each level knows how deep it is with respect to the root.
+
+Nice! Now we got the main method for building our tree, let's wrap it nicely into a `fit` method:
+
+```python
+def fit(self, X, y):
+    """
+    Build decision tree by recursively splitting data.
+    """
+    if not isinstance(X, MLArray):
+        X = MLArray(X)
+    if not isinstance(y, MLArray):
+        y = MLArray(y)
+        
+    self.n_classes = len(set(y.flatten(y.data))) if self.task == "classification" else None
+    self.root = self._grow_tree(X.data, y.data)
+```
 
 Once the tree is built, predicting is straightforward! For a new data point:
-1.  Start at the `root` node.
+1. We start at the `root` node
 2.  Check the decision rule (feature and threshold) at the current node.
 3.  Follow the corresponding branch (left if `feature_value <= threshold`, right otherwise).
 4.  Repeat steps 2 and 3 until you reach a leaf node (`_traverse_tree` method).
-5.  The prediction is the value stored in that leaf node (`node.value`). This value is determined during training (`_leaf_value`):
-    * Classification: The most common class among the training samples that ended up in this leaf.
-    * Regression: The average value of the training samples that ended up in this leaf.
+5.  The prediction is the value stored in that leaf node (`node.value`).
 
-Cool, right? A single tree is intuitive, but sometimes they can be a bit unstable and prone to overfitting. What if we could combine *many* trees?
+```python
+def predict(self, X):
+    """
+    Makes predictions using trained tree.
+    """
+    if not isinstance(X, MLArray):
+        X = MLArray(X)
+        
+    return MLArray([self._traverse_tree(x, self.root) for x in X.data])
+
+def _traverse_tree(self, x, node):
+    """
+    Traverses tree to make prediction for single sample.
+    """
+    if node.value is not None:  # Leaf node
+        return node.value
+
+    if x[node.feature_idx] <= node.threshold:
+        return self._traverse_tree(x, node.left)
+    return self._traverse_tree(x, node.right)
+```
+
+In these trees prediction is super fast, `O(log n)` in balanced trees, because we only follow one path from root to leaf, and we don't need to examine the rest of the nodes.
+
+This is also where decision trees really shine for interpretability. You can literally print out the path taken: 
+'Temperature > 25°C → Humidity ≤ 60% → Play Tennis!'. We added a small `show_tree` method for easy visualization after training:
+
+```
+Decision Tree Structure:
+Root: sepal length (cm) <= 5.7000
+├─ Left: sepal width (cm) <= 3.1000
+│  ├─ Left: sepal length (cm) <= 5.2000
+│  │  ├─ Left: sepal width (cm) <= 2.7000
+│  │  │  ├─ Left: sepal length (cm) <= 4.9000
+│  │  │  │  ├─ Left: Leaf → Class 0.0
+│  │  │  │  └─ Right: Leaf → Class 1.0
+│  │  │  └─ Right: sepal length (cm) <= 4.4000
+│  │  │     ├─ Left: Leaf → Class 0.0
+│  │  │     └─ Right: Leaf → Class 0.0
+...
+```
+
+Cool, right? A single tree is intuitive, but sometimes they can be a bit unstable and prone to overfitting. What if we could combine _many_ trees?
+
+### Run tests!
+
+Feel free to run `tests/decision_tree_tests.py` to see how our new model can be used for both classification and regression using real [Sklearn](https://scikit-learn.org) datasets! 
+
+The test will generate some plots with the results. Change the parameters of the test as you will, or try it with other datasets and against other frameworks!
 
 ## Random Forests: The Wisdom of Many Trees
 

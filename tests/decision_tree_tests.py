@@ -139,6 +139,10 @@ class TestDecisionTree(unittest.TestCase):
             self.feature_names_iris, self.class_names_iris
         )
         
+        # Show tree with feature names
+        print("\nDecision Tree Structure:")
+        clf.show_tree(feature_names=self.feature_names_iris)
+        
         # Assertions
         self.assertGreater(accuracy, 0.7, "Classification accuracy should be > 70%")
 
@@ -177,6 +181,10 @@ class TestDecisionTree(unittest.TestCase):
             self.feature_names_diabetes
         )
         
+        # Show tree with feature names
+        print("\nDecision Tree Structure:")
+        reg.show_tree(feature_names=self.feature_names_diabetes)
+        
         # Assertions
         self.assertLess(mse, 1.0, "MSE should be < 1.0 for scaled data")
 
@@ -189,10 +197,16 @@ class TestDecisionTree(unittest.TestCase):
         tree.fit(MLArray([[1], [2]]), MLArray([1, 2]))
         self.assertIsNotNone(tree.root)
         
+        print("\nEdge Case Tree Structure:")
+        tree.show_tree(feature_names=['simple_feature'])
+        
         # Test with single class
         tree = DecisionTree()
         tree.fit(MLArray([[1], [2]]), MLArray([1, 1]))
         self.assertEqual(tree.predict(MLArray([[1.5]])).to_list()[0], 1)
+        
+        print("\nSingle Class Tree Structure:")
+        tree.show_tree(feature_names=['feature_x'])
 
 if __name__ == '__main__':
     unittest.main()

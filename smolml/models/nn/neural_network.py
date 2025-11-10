@@ -1,8 +1,6 @@
 from smolml.core.ml_array import MLArray
 from smolml.models.nn import DenseLayer
 import smolml.utils.memory as memory
-import smolml.utils.losses as losses
-import smolml.utils.activation as activation
 import smolml.utils.optimizers as optimizers
 
 """
