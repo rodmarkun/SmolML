@@ -106,6 +106,18 @@ Method implementation:
 
 The `forward()` method essentially defines how data flows through the layer. Because `input_data`, `self.weights`, and `self.biases` are `MLArray`s (which use `Value` objects internally), all operations automatically build the computational graph needed for backpropagation.
 
+<div align="center">
+  <img src="../../../images/NN-Matrixes.png" alt="Layer computation image">
+</div>
+
+> You might be wondering why we don't transpose the weights in the `forward` method. This is due to how we initialize them! Our weights have shape _(input_size, output_size)_, which is already the correct orientation for matrix multiplication:
+
+```
+(batch_size, input_size) @ (input_size, output_size) = (batch_size, output_size) ✓
+```
+
+> This means `input_data @ self.weights` works directly without needing `.T`. If we had instead initialized weights as _(output_size, input_size)_, we would need to transpose them during the forward pass: `input_data @ self.weights.T`. Both approaches are valid, it's just a matter of convention. But storing weights as _(input_size, output_size)_ is the most common standard in modern frameworks like PyTorch and TensorFlow, and keeps our code cleaner!
+
 Finally, _how do we train this thing?_ _where does the `fit()` method go in here?_ Remember! This is a **layer** of a neural network! We will not be training this thing directly, instead, we will be **updating** its weights and biases based on the neural network's training (which contains several layers)!
 
 ```python

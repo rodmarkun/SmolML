@@ -148,10 +148,10 @@ class DecisionTree:
         - Reduction in MSE for regression
         """
         if self.task == "classification":
-            return self._information_gain(parent, left, right)
-        return self._mse_reduction(parent, left, right)
+            return self._information_gain_entropy(parent, left, right)
+        return self._information_gain_mse(parent, left, right)
 
-    def _information_gain(self, parent, left, right):
+    def _information_gain_entropy(self, parent, left, right):
         """
         Calculates information gain using entropy.
         """
@@ -166,7 +166,7 @@ class DecisionTree:
                           len(right)/n * entropy(right))
         return entropy_parent - entropy_children
 
-    def _mse_reduction(self, parent, left, right):
+    def _information_gain_mse(self, parent, left, right):
         """
         Calculates reduction in MSE.
         """
@@ -223,6 +223,60 @@ class DecisionTree:
         if x[node.feature_idx] <= node.threshold:
             return self._traverse_tree(x, node.left)
         return self._traverse_tree(x, node.right)
+    
+    def show_tree(self, node=None, prefix="", is_left=True, is_root=True, feature_names=None):
+        """
+        Prints a visual representation of the decision tree structure.
+        """
+        if node is None:
+            if self.root is None:
+                print("Tree not yet trained!")
+                return
+            node = self.root
+        
+        # Determine the connector symbol
+        if is_root:
+            connector = "Root: "
+            branch = ""
+        else:
+            connector = "├─ Left: " if is_left else "└─ Right: "
+            branch = prefix
+        
+        # Print current node
+        if node.value is not None:  # Leaf node
+            leaf_val = node.value
+            if hasattr(leaf_val, 'data'):
+                leaf_val = leaf_val.data
+            
+            if self.task == "classification":
+                print(f"{branch}{connector}Leaf → Class {leaf_val}")
+            else:
+                print(f"{branch}{connector}Leaf → {leaf_val:.4f}")
+        else:  # Internal node
+            # Extract threshold value if it's wrapped in Value/MLArray
+            threshold_val = node.threshold
+            if hasattr(threshold_val, 'data'):
+                threshold_val = threshold_val.data
+            
+            # Get feature name
+            if feature_names is not None and node.feature_idx < len(feature_names):
+                feature_name = feature_names[node.feature_idx]
+            else:
+                feature_name = f"feature_{node.feature_idx}"
+            
+            print(f"{branch}{connector}{feature_name} <= {threshold_val:.4f}")
+            
+            # Prepare prefix for children
+            if is_root:
+                new_prefix = ""
+            else:
+                new_prefix = prefix + ("│  " if is_left else "   ")
+            
+            # Recursively print children
+            if node.left:
+                self.show_tree(node.left, new_prefix, is_left=True, is_root=False, feature_names=feature_names)
+            if node.right:
+                self.show_tree(node.right, new_prefix, is_left=False, is_root=False, feature_names=feature_names)
     
     def __repr__(self):
         """
