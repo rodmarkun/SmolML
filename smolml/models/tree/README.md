@@ -353,16 +353,138 @@ Feel free to run `tests/decision_tree_tests.py` to see how our new model can be 
 
 The test will generate some plots with the results. Change the parameters of the test as you will, or try it with other datasets and against other frameworks!
 
-## Random Forests: The Wisdom of Many Trees
+## Random Forests
 
+A single Decision Tree can be sensitive to the specific data it's trained on. A slightly different dataset might produce a very different tree structure. **Random Forests** tackle this by building an _ensemble_ (a "forest") of many Decision Trees trained differently and combining their predictions. It's like asking many different experts (trees) and going with the consensus!
 
 <div align="center">
-  <img src="https://github.com/user-attachments/assets/6a652774-4fc3-4ed1-89d4-e9eaf1410e2a" width="600">
+  <img src="../../../images/RandomForest.png" alt="Random Forest Diagram" width="1000">
 </div>
 
-A single Decision Tree can be sensitive to the specific data it's trained on. A slightly different dataset might produce a very different tree structure. **Random Forests** tackle this by building an *ensemble* (a "forest") of many Decision Trees and combining their predictions. It's like asking many different experts (trees) and going with the consensus!
+Random Forests use two clever techniques to create diverse trees that, when combined, make better predictions than a single tree:
 
-**The "Random" Secrets (`RandomForest` class in `random_forest.py`):**
+The first one is **bootstrap aggregating** (_bagging_). Each tree is trained on a different **bootstrap sample** of the data. What's a bootstrap sample? It's created by randomly sampling the training data with replacement, meaning that the same data point can appear multiple times in a single tree's training set, while other points might not appear at all.
+
+For example, if we have 100 training samples:
+
+- Tree 1 might train on samples: `[5, 12, 12, 23, 45, 45, 67, ...]` (notice the duplicates)
+- Tree 2 might train on samples: `[2, 8, 23, 34, 56, 56, 89, ...]`
+- Tree 3 might train on samples: `[1, 5, 15, 23, 34, 67, 67, ...]`
+- And so on.
+
+Each tree sees a slightly different view of the data, so they learn different patterns and make different mistakes. When we combine their predictions (called aggregating), these individual errors tend to cancel out!
+
+```python
+def _bootstrap_sample(self, X, y):
+    """
+    Create a bootstrap sample with replacement.
+    """
+    n_samples = len(X)
+    indices = [random.randint(0, n_samples - 1) for _ in range(n_samples)]
+    
+    bootstrap_X = [X[i] for i in indices]
+    bootstrap_y = [y[i] for i in indices]
+    
+    return bootstrap_X, bootstrap_y
+```
+
+The second one is **random feature selection**. When each tree considers a split, it doesn't look at _all_ features. Instead, it randomly selects a subset of features to choose from. This prevents one or two strong features from dominating all the trees in our forest.
+
+The typical number of features to consider is:
+- $\sqrt(features)$ in **classification**. So if you have 16 features, each split considers 4 random features.
+- $\frac{features}{3}$ in **regression**. If you have 9 features, each split considers 3 random features. 
+
+```python
+def _get_max_features(self, n_features):
+    """
+    Determine number of features to consider at each split.
+    """
+    if self.max_features is None:
+        # Use sqrt(n_features) for classification, n_features/3 for regression
+        if self.task == "classification":
+            return max(1, int(n_features ** 0.5))
+        else:
+            return max(1, n_features // 3)
+    return min(self.max_features, n_features)
+```
+
+So how do we orchestrate the training of several trees that live inside our forest? First of course, we will iterate over the **number of trees** we wish to create. Then, we get the **data** for our current tree with our `_bootstrap_sample` method. I gave the user the option to choose if they want to bootstrap or not for flexibility, but you can just assume they will want to. This ensures each tree sees a different slice of the data.
+
+```python        
+# Create and train each tree
+for _ in range(self.n_trees):
+    # Create bootstrap sample if enabled
+    if self.bootstrap:
+        sample_X, sample_y = self._bootstrap_sample(X_data, y_data)
+    else:
+        sample_X, sample_y = X_data, y_data
+```
+
+Then, we will create a standard `DecisionTree` just as we did in the previous section:
+
+```python
+tree = DecisionTree(
+    max_depth=self.max_depth,
+    min_samples_split=self.min_samples_split,
+    min_samples_leaf=self.min_samples_leaf,
+    task=self.task
+)
+```
+
+Here's where it gets interesting! We want this tree to only **consider a random subset of features at each split**, but we already have a working `_find_best_split` implementation in our `DecisionTree`!. We need to add a small modification in order to it only use certain features instead of all of them. We will define **the same method** but with this slight modification, and replace the `DecisionTree`'s normal method with this one!
+
+```python
+def random_feature_find_best_split(self, X, y):
+    n_features = len(X[0])
+    feature_indices = random.sample(range(n_features), max_features)
+    
+    ### THIS PART IS THE SAME AS IN THE TREE'S _find_best_split ###
+    best_gain = -float('inf')
+    best_feature = None
+    best_threshold = None
+    
+    for feature_idx in feature_indices:
+        thresholds = sorted(set(row[feature_idx] for row in X))
+        
+        for threshold in thresholds:
+            left_idxs, right_idxs = tree._split_data(X, feature_idx, threshold)
+            
+            if len(left_idxs) < tree.min_samples_leaf or len(right_idxs) < tree.min_samples_leaf:
+                continue
+            
+            left_y = [y[i] for i in left_idxs]
+            right_y = [y[i] for i in right_idxs]
+            
+            gain = tree._calculate_gain(y, left_y, right_y)
+            
+            if gain > best_gain:
+                best_gain = gain
+                best_feature = feature_idx
+                best_threshold = threshold
+    
+    return best_feature, best_threshold
+    ### END OF EQUIVALENT PART ###
+
+# Replace tree's _find_best_split with our random feature version
+tree._find_best_split = random_feature_find_best_split.__get__(tree)
+```
+
+These two are the key lines:
+
+```python 
+feature_indices = random.sample(range(n_features), max_features)
+```
+
+If we have 16 features and `max_features=4`, this might select features `[2, 7, 11, 15]`. When the tree grows and needs to find the best split, it will only consider these 4 features instead of all 16!
+
+
+We then bind our custom function to the tree instance:
+
+```python
+tree._find_best_split = random_feature_find_best_split.__get__(tree)
+```
+
+The `__get__` part is Python magic that properly binds the method to the tree instance, so when the method calls `tree._split_data(...)` or `tree._calculate_gain(...)`, it references the correct `DecisionTree` object.
 
 Random Forests introduce clever randomness during the training (`fit` method) of individual trees to make them diverse:
 
