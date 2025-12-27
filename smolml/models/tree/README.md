@@ -553,6 +553,6 @@ rf_new_pred = rf.predict(X_new)
 print(f"\nRF Predictions on new data {X_new.to_list()}: {rf_new_pred.to_list()}")
 ```
 
-## From roots to leaves, from data to predictions
+We've now implemented both decision trees and random forests! These are powerful models, though they require careful parameter tuning to prevent overfitting. Next up, we will see SVMs, which use geometry to make their predictions!
 
-Decision Trees offer an interpretable, flowchart-like way to model data, while Random Forests leverage the power of ensemble learning (combining many diverse trees) to create highly accurate and robust models for both classification and regression. They represent a different paradigm from gradient-based optimization, but are a cornerstone of practical machine learning!
+[Next Section: Support Vector Machines](https://github.com/rodmarkun/SmolML/tree/main/smolml/models/svm)
