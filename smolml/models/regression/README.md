@@ -1,8 +1,8 @@
 # SmolML - Regression: Predicting Continuous Values
 
-Building upon the core concepts of automatic differentiation (`Value`) and N-dimensional arrays (`MLArray`) explained in the [SmolML Core](https://github.com/rodmarkun/SmolML/tree/main/smolml/core), we can now implement various machine learning models. This section focuses on **regression models**, which are used to predict continuous numerical outputs. Think of predicting house prices, stock values, or temperature based on input features.
+Building upon the core concepts of automatic differentiation (`Value`) and N-dimensional arrays (`MLArray`) explained in the [SmolML Core](https://github.com/rodmarkun/SmolML/tree/main/smolml/core), we can now implement various machine learning models! This section focuses on **regression models**, which are used to predict continuous numerical outputs. Think of predicting house prices, stock values, or temperature based on input features.
 
-While deep neural networks offer immense power, simpler models like Linear Regression or its extension, Polynomial Regression, are often excellent starting points, computationally efficient, and highly interpretable. They share the same fundamental learning principle as complex networks: minimizing a loss function by adjusting parameters using gradient descent, all powered by our automatic differentiation engine using the `Value` class. We will use them as a small testing ground for the classes we have just implemented!
+While deep neural networks offer immense power, simpler models like **Linear Regression** or its extension, **Polynomial Regression**, are often excellent starting points, computationally efficient, and highly interpretable. They share the same fundamental learning principle as complex networks: minimizing a loss function by adjusting parameters using gradient descent, all powered by our automatic differentiation engine using the `Value` class. We will use them as a small testing ground for the classes we have just implemented!
 
 ## Regression Fundamentals: Learning from Data
 
@@ -445,3 +445,7 @@ X_test = MLArray([[1.5, 2.0]])
 pred_multi = model_multi.predict(X_test)
 print(f"\nPrediction for {X_test.to_list()}: {pred_multi.to_list()}")
 ```
+
+And that's it! We now have a couple of simple models that can learn from data. Now, what if we go to something a bit... *deeper*?
+
+[Next Section: Neural Networks](https://github.com/rodmarkun/SmolML/tree/main/smolml/models/nn)

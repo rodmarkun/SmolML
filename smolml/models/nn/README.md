@@ -14,7 +14,7 @@ My goal today is to make you understand all that's happening in the image above 
 
 ## The Neuron
 
-At the heart of a neural network is the neuron (or node). Think of it as a small computational unit that receives several inputs, processes them, and produces a single output (if you've ever played Factorio, neural networks are just a fabric of converting some inputs into outputs).
+At the heart of a neural network is the **neuron** (or node). Think of it as a small computational unit that receives several inputs, processes them, and produces a single output (if you've ever played Factorio, neural networks are just a fabric of converting some inputs into outputs).
 
 <div align="center">
 

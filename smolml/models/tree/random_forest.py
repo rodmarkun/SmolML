@@ -89,8 +89,6 @@ class RandomForest:
                 task=self.task
             )
             
-            # Modify tree's _find_best_split to use random feature subset
-            original_find_best_split = tree._find_best_split
             def random_feature_find_best_split(self, X, y):
                 n_features = len(X[0])
                 feature_indices = random.sample(range(n_features), max_features)

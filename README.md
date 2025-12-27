@@ -23,6 +23,7 @@ You can read these guides of the different sections of SmolML in any order, thou
 - [SmolML - Regression: Predicting Continuous Values](https://github.com/rodmarkun/SmolML/tree/main/smolml/models/regression)
 - [SmolML - Neural Networks: Backpropagation to the limit](https://github.com/rodmarkun/SmolML/tree/main/smolml/models/nn)
 - [SmolML - Tree Models: Decisions, Decisions!](https://github.com/rodmarkun/SmolML/tree/main/smolml/models/tree)
+- [SmolML - Support Vector Machines: Finding the Optimal Boundary!](https://github.com/rodmarkun/SmolML/tree/main/smolml/models/svm)
 - [SmolML - K-Means: Finding Groups in Your Data!](https://github.com/rodmarkun/SmolML/tree/main/smolml/models/unsupervised)
 - [SmolML - Preprocessing: Make your data meaningful](https://github.com/rodmarkun/SmolML/tree/main/smolml/preprocessing)
 - [SmolML - The utility room!](https://github.com/rodmarkun/SmolML/tree/main/smolml/utils)
