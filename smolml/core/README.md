@@ -1,12 +1,12 @@
 # SmolML - Core: Automatic Differentiation & N-Dimensional Arrays
 
-Welcome to the core of SmolML! This is where the magic begins if you want to understand how machine learning models, especially neural networks, learn from data. We'll break down two fundamental concepts: how models *calculate* the direction for learning (**automatic differentiation**) and how we handle the **multi-dimensional data** involved.
+Welcome to the **core** of **SmolML**! This is where the magic begins if you want to understand how machine learning models, especially neural networks, learn from data. We'll break down two fundamental concepts: how models *calculate* the direction for learning (**automatic differentiation**) and how we handle the **multi-dimensional data** involved.
 
 This part of SmolML focuses on handling this data and calculating gradients automatically. What are gradients and why do we need them? Let's dive in.
 
 ## Why Do We Need Gradients Anyway?
 
-Think about teaching a model to recognize a cat in a photo. The model makes a prediction based on its current internal settings (parameters or weights). Initially, these settings are random, so the prediction is likely wrong. We measure *how wrong* using a **loss function** (we have those in `smolml\utils\losses.py`, explained in another section): basically, *a lower loss means a better prediction*.
+Think about teaching a model to recognize a cat in a photo. The model makes a prediction based on its current internal settings (parameters or weights). Initially, these settings are random, so the prediction is likely wrong. We measure *how wrong* using a **loss function** (we have those in `smolml\utils\losses.py`): basically, *a lower loss means a better prediction*.
 
 The goal is to adjust our computer's parameters to *minimize* this loss. But how do we know *which way* to adjust each parameter? Should we increase it? Decrease it? By how much?
 
@@ -69,7 +69,7 @@ Think of a `Value` object as a smart container for a single number (a scalar). I
 1.  `data`: The actual numerical value (e.g., 5.0, -3.2).
 2.  `grad`: The gradient of the *final output* of our entire computation graph with respect to *this* specific `Value`'s data. It starts at 0 and gets filled during backpropagation.
 
-Can you build a class that does this? It does not need to be 100% implemented yet, but try to do a bit of a sketch. Remember we are showing the process in Python but you can do this in any language you want to! 
+> Can you build a class that does this? It does not need to be 100% implemented yet, but try to do a bit of a sketch. Remember we are showing the process in Python but you can do this in any language you want to! 
 
 **Building the Calculation Trail (Computational Graph)**
 
@@ -107,6 +107,8 @@ Let's backpropagate the small example from just before:
 Each `Value` object stores a tiny function (`_backward`) that knows how to compute the local gradients for the operation it represents (+, *, tanh, etc.). The `.backward()` method orchestrates calling these small functions in the correct reverse order (using a topological sort) to implement the chain rule across the entire graph.
 
 After calling `.backward()`, `a.grad`, `b.grad`, and `c.grad` hold the gradients, telling you exactly how sensitive the final output `y` is to changes in the initial inputs `a`, `b`, and `c`.
+
+And that’s it! We now have an object that allows our models to learn efficiently. However, machine learning models don’t work with just one sample of data: they process thousands, sometimes even millions, of data instances. On top of that, this data often spans multiple dimensions. I wonder if there's a certain data structure that can help us with this problematic...
 
 ## Handling N-Dimensional Arrays of Values with `MLArray`
 
@@ -198,3 +200,5 @@ With these two core components:
 - An `MLArray` class that organizes these `Value` objects into N-dimensional arrays and extends mathematical operations (like matrix multiplication, broadcasting) to work seamlessly within the AutoDiff framework.
 
 We have the essential toolkit to build and, more importantly, train various machine learning models, like simple neural networks, entirely from scratch. We can now define network layers, compute loss functions, and use the calculated gradients to update parameters and make our models learn!
+
+[Next section: Linear Regression](https://github.com/rodmarkun/SmolML/tree/main/smolml/models/regression)
