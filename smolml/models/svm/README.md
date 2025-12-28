@@ -58,12 +58,6 @@ if y1 != y2:
     L, H = max(0, a2_old - a1_old), min(self.C, self.C + a2_old - a1_old)
 ```
 
-<div align="center">
-
-  ![Soft Margin in SVM](../../../images/SoftMarginSVM.png)
-  
-</div>
-
 We now have a constrained optimization problem. We need to solve:
 $$\min_{w,b,\xi} \frac{1}{2}||w||^2 + C\sum_i \xi_i$$
 $$\text{subject to: } y_i(w \cdot x_i - b) \geq 1 - \xi_i, \quad \xi_i \geq 0$$
@@ -684,7 +678,7 @@ In classification, we maximize the margin between classes. In regression, we fit
 
 <div align="center">
 
-  ![Single Neuron Model](../../../images/SVREpsilonTube.png)
+  ![SVR](../../../images/SVREpsilonTube.png)
   
 </div>
 
