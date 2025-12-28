@@ -1,23 +1,10 @@
-# SmolML - The utility room!
+# SmolML - The Utility Room!
 
-Welcome to the util components of SmolML! This directory houses the supporting building blocks required for constructing, training, and analyzing machine learning models within our framework. Think of these modules as the assistance tools and ingredients you'll use repeatedly.
+Welcome to the utility components of SmolML! This directory houses the supporting building blocks required for constructing, training, and analyzing machine learning models within our framework. 
 
-Everything here leverages the `MLArray` for handling numerical data and automatic differentiation (where applicable).
+Let's go over them one by one.
 
-## Directory Structure
-
-```
-.
-├── activation.py       # Non-linear functions for neural networks
-├── initializers.py     # Strategies for setting initial model weights
-├── losses.py           # Functions to measure model error
-├── memory.py           # Utilities to calculate memory usage
-└── optimizers.py       # Algorithms to update model weights during training
-```
-
----
-
-## Activation Functions (`activation.py`)
+## Activation Functions
 
 **Why do we need them?**
 
@@ -25,55 +12,141 @@ Imagine building a neural network. If you just stack linear operations (like mat
 
 **Activation functions** introduce **non-linearity** into the network, typically applied element-wise after a linear transformation in a layer. This allows the network to approximate much more complicated functions.
 
-**How they work (generally):**
-
-Each activation function takes a numerical input (often the output of a linear layer) and applies a specific mathematical transformation to it. Most functions provided here operate element-by-element on an `MLArray`.
-
-**Key Activation Functions Provided:**
-
-* **`relu(x)` (Rectified Linear Unit):**
-    * *Concept:* Outputs the input if it's positive, otherwise outputs zero ($f(x) = \max(0, x)$).
-    * *Why:* Computationally very efficient, helps mitigate vanishing gradients, and is the most common choice for hidden layers in deep networks.
-    * *Code:* Uses `_element_wise_activation` with `val.relu()`.
-
-* **`leaky_relu(x, alpha=0.01)`:**
-    * *Concept:* Like ReLU, but allows a small, non-zero gradient for negative inputs ($f(x) = x$ if $x > 0$, else $f(x) = \alpha x$).
-    * *Why:* Attempts to fix the "dying ReLU" problem where neurons can become inactive if they consistently output negative values.
-    * *Code:* Uses `_element_wise_activation` with a custom lambda checking the value.
-
-* **`elu(x, alpha=1.0)` (Exponential Linear Unit):**
-    * *Concept:* Similar to Leaky ReLU but uses an exponential curve for negative inputs ($f(x) = x$ if $x > 0$, else $f(x) = \alpha (e^x - 1)$).
-    * *Why:* Aims to have negative outputs closer to -1 on average, potentially speeding up learning. Smoother than ReLU/Leaky ReLU.
-    * *Code:* Uses `_element_wise_activation` with a custom lambda.
-
-* **`sigmoid(x)`:**
-    * *Concept:* Squashes input values into the range (0, 1) using the formula $f(x) = \frac{1}{1 + e^{-x}}$.
-    * *Why:* Historically popular, often used in the output layer for **binary classification** problems to interpret the output as a probability. Can suffer from vanishing gradients in deep networks.
-    * *Code:* Uses `_element_wise_activation` with the sigmoid formula.
-
-* **`softmax(x, axis=-1)`:**
-    * *Concept:* Transforms a vector of numbers into a probability distribution (values are non-negative and sum to 1). It exponentiates inputs and then normalizes them.
-    * *Why:* Essential for the output layer in **multi-class classification** problems. Each output node represents the probability of the input belonging to a specific class. Note the `axis` argument determines *along which dimension* the normalization occurs.
-    * *Code:* Handles scalars, 1D, and multi-dimensional `MLArray`s, applying the softmax logic recursively along the specified `axis`. Includes numerical stability improvements (subtracting the max value before exponentiation).
-
-* **`tanh(x)` (Hyperbolic Tangent):**
-    * *Concept:* Squashes input values into the range (-1, 1) ($f(x) = \frac{e^x - e^{-x}}{e^x + e^{-x}}$).
-    * *Why:* Similar use cases to sigmoid but zero-centered output range can sometimes be beneficial. Also susceptible to vanishing gradients.
-    * *Code:* Uses `_element_wise_activation` with `val.tanh()`.
-
-* **`linear(x)`:**
-    * *Concept:* Simply returns the input unchanged ($f(x) = x$).
-    * *Why:* Used when no non-linearity is needed, for example, in the output layer of a regression model.
-
-*(See `activation.py` for implementation details)*
-
 <div align="center">
   <img src="https://github.com/user-attachments/assets/c610f284-dbf2-4a69-8f88-5433a28276cb" width="600">
 </div>
 
----
+Most of our activation functions use a helper that applies the transformation element-wise to any n-dimensional MLArray:
 
-## Weight Initializers (`initializers.py`)
+```python
+def _element_wise_activation(x, activation_fn):
+    if len(x.shape) == 0:  # scalar
+        return MLArray(activation_fn(x.data))
+
+    def apply_recursive(data):
+        if isinstance(data, list):
+            return [apply_recursive(d) for d in data]
+        return activation_fn(data)
+
+    return MLArray(apply_recursive(x.data))
+```
+
+This recursively traverses the nested structure of the MLArray and applies the activation function to each `Value` element.
+
+### ReLU (Rectified Linear Unit)
+
+The most common activation for hidden layers: outputs the input if positive, otherwise zero.
+
+$$f(x) = \max(0, x)$$
+
+```python
+def relu(x):
+    return _element_wise_activation(x, lambda val: val.relu())
+```
+
+Computationally efficient and helps mitigate vanishing gradients in deep networks.
+
+### Leaky ReLU
+
+Like ReLU, but allows a small gradient for negative inputs to prevent "dying neurons":
+
+$$f(x) = x \text{ if } x > 0, \text{ else } \alpha x$$
+
+```python
+def leaky_relu(x, alpha=0.01):
+    def leaky_relu_single(val):
+        if val > 0:
+            return val
+        return val * alpha
+
+    return _element_wise_activation(x, leaky_relu_single)
+```
+
+### ELU (Exponential Linear Unit)
+
+Similar to Leaky ReLU but uses an exponential curve for negative inputs:
+
+$$f(x) = x \text{ if } x > 0, \text{ else } \alpha (e^x - 1)$$
+
+```python
+def elu(x, alpha=1.0):
+    def elu_single(val):
+        if val > 0:
+            return val
+        return alpha * (val.exp() - 1)
+
+    return _element_wise_activation(x, elu_single)
+```
+
+Smoother than ReLU/Leaky ReLU and can speed up learning.
+
+### Sigmoid
+
+Squashes input values into the range (0, 1):
+
+$$f(x) = \frac{1}{1 + e^{-x}}$$
+
+```python
+def sigmoid(x):
+    def sigmoid_single(val):
+        return 1 / (1 + (-val).exp())
+
+    return _element_wise_activation(x, sigmoid_single)
+```
+
+Often used in the output layer for **binary classification** to interpret outputs as probabilities.
+
+### Softmax
+
+Transforms a vector into a probability distribution (values are non-negative and sum to 1):
+
+```python
+def softmax(x, axis=-1):
+    # Handle scalar case
+    if len(x.shape) == 0:
+        return MLArray(1.0)
+
+    # Handle negative axis
+    if axis < 0:
+        axis += len(x.shape)
+
+    # Handle 1D case
+    if len(x.shape) == 1:
+        max_val = x.max()
+        exp_x = (x - max_val).exp()  # Numerical stability
+        sum_exp = exp_x.sum()
+        return exp_x / sum_exp
+
+    # Handle multi-dimensional case recursively...
+```
+
+Essential for the output layer in **multi-class classification**. The `axis` argument determines along which dimension the normalization occurs. Note the numerical stability trick: subtracting the max value before exponentiation prevents overflow.
+
+### Tanh (Hyperbolic Tangent)
+
+Squashes input values into the range (-1, 1):
+
+$$f(x) = \frac{e^x - e^{-x}}{e^x + e^{-x}}$$
+
+```python
+def tanh(x):
+    return _element_wise_activation(x, lambda val: val.tanh())
+```
+
+Similar to sigmoid but zero-centered, which can be beneficial in some cases.
+
+### Linear
+
+Simply returns the input unchanged:
+
+```python
+def linear(x):
+    return x
+```
+
+Used when no non-linearity is needed, for example in the output layer of a regression model.
+
+## Weight Initializers
 
 **Why is initialization important?**
 
@@ -82,30 +155,84 @@ When you create a neural network layer, its weights and biases need starting val
 * **Too large:** Gradients might explode, leading to unstable training (NaN values).
 * **Symmetry:** If all weights start the same, neurons in the same layer will learn the same thing, defeating the purpose of having multiple neurons.
 
-**Weight initializers** provide strategies to set these starting weights intelligently, breaking symmetry and keeping signals/gradients in a reasonable range to promote stable and efficient learning.
+**Weight initializers** provide strategies to set these starting weights intelligently, breaking symmetry and keeping signals/gradients in a reasonable range.
 
-**How they work (generally):**
+All initializers inherit from a base class that provides a helper for creating arrays:
 
-They typically draw random numbers from specific probability distributions (like uniform or normal/Gaussian) whose parameters (like variance) are scaled based on the number of input units (`fan_in`) and/or output units (`fan_out`) of the layer. This scaling helps maintain signal variance as it passes through layers.
+```python
+class WeightInitializer:
+   @staticmethod
+   def _create_array(generator, dims):
+       total_elements = reduce(mul, dims)
+       flat_array = [generator() for _ in range(total_elements)]
+       return MLArray(flat_array).reshape(*dims)
+```
 
-**Key Initializers Provided:**
+This creates an MLArray of the desired shape by generating random values and reshaping.
 
-* **`WeightInitializer` (Base Class):** Defines the interface and provides a helper `_create_array` for generating `MLArray`s.
-* **`XavierUniform` / `XavierNormal` (Glorot Initialization):**
-    * *Concept:* Scales the initialization variance based on both `fan_in` and `fan_out`. Aims to keep variance consistent forwards and backwards.
-    * *Why:* Works well with activation functions like `sigmoid` and `tanh`. `XavierUniform` uses a uniform distribution, `XavierNormal` uses a normal distribution.
-    * *Code:* Calculates limits/standard deviation based on $\sqrt{6 / (fan\_in + fan\_out)}$ (Uniform) or $\sqrt{2 / (fan\_in + fan\_out)}$ (Normal).
+### Random Uniform
 
-* **`HeInitialization` (Kaiming Initialization):**
-    * *Concept:* Scales the initialization variance based primarily on `fan_in`.
-    * *Why:* Specifically designed for and works well with `relu` and its variants, accounting for the fact that ReLU zeros out half the inputs. Uses a normal distribution.
-    * *Code:* Calculates standard deviation based on $\sqrt{2 / fan\_in}$.
+Simple uniform initialization in a specified range:
 
-*(See `initializers.py` for implementation details)*
+```python
+class RandomUniform(WeightInitializer):
+    @staticmethod
+    def initialize(*dims, limit=1.0):
+        dims = RandomUniform._process_dims(dims)
+        return RandomUniform._create_array(lambda: random.uniform(-limit, limit), dims)
+```
 
----
+### Xavier/Glorot Initialization
 
-## Loss Functions (`losses.py`)
+Scales the initialization variance based on both `fan_in` (input units) and `fan_out` (output units). Works well with `sigmoid` and `tanh` activations.
+
+**Xavier Uniform:**
+
+$$\text{limit} = \sqrt{\frac{6}{fan_{in} + fan_{out}}}$$
+
+```python
+class XavierUniform(WeightInitializer):
+   @staticmethod
+   def initialize(*dims):
+       dims = XavierUniform._process_dims(dims)
+       fan_in = dims[0] if len(dims) > 0 else 1
+       fan_out = dims[-1] if len(dims) > 1 else fan_in
+       limit = math.sqrt(6. / (fan_in + fan_out))
+       return XavierUniform._create_array(lambda: random.uniform(-limit, limit), dims)
+```
+
+**Xavier Normal:**
+
+$$\sigma = \sqrt{\frac{2}{fan_{in} + fan_{out}}}$$
+
+```python
+class XavierNormal(WeightInitializer):
+   @staticmethod
+   def initialize(*dims):
+       dims = XavierNormal._process_dims(dims)
+       fan_in = dims[0] if len(dims) > 0 else 1
+       fan_out = dims[-1] if len(dims) > 1 else fan_in
+       std = math.sqrt(2. / (fan_in + fan_out))
+       return XavierNormal._create_array(lambda: random.gauss(0, std), dims)
+```
+
+### He/Kaiming Initialization
+
+Designed specifically for ReLU activations, accounting for the fact that ReLU zeros out half the inputs:
+
+$$\sigma = \sqrt{\frac{2}{fan_{in}}}$$
+
+```python
+class HeInitialization(WeightInitializer):
+   @staticmethod
+   def initialize(*dims):
+       dims = HeInitialization._process_dims(dims)
+       fan_in = dims[0] if len(dims) > 0 else 1
+       std = math.sqrt(2. / fan_in)
+       return HeInitialization._create_array(lambda: random.gauss(0, std), dims)
+```
+
+## Loss Functions
 
 **What is a loss function?**
 
@@ -115,102 +242,254 @@ During training, we need a way to measure how "wrong" our model's predictions ar
   <img src="https://github.com/user-attachments/assets/6fe8332d-904f-45f8-a2f6-9bca50ffd576" width="500">
 </div>
 
+Different loss functions are suited for different types of problems (regression vs. classification) and have different properties (e.g., sensitivity to outliers).
 
-**How they work:**
+### Mean Squared Error (MSE)
 
-A loss function takes the model's predictions (`y_pred`) and the true target values (`y_true`) as input and outputs a single scalar value representing the average error across the samples. Different loss functions are suited for different types of problems (regression vs. classification) and have different properties (e.g., sensitivity to outliers).
+Standard choice for **regression** problems:
 
-**Key Loss Functions Provided:**
+$$L = \frac{1}{N} \sum_{i=1}^{N} (y_{pred, i} - y_{true, i})^2$$
 
-* **`mse_loss(y_pred, y_true)` (Mean Squared Error):**
-    * *Concept:* Calculates the average of the squared differences between predictions and true values: $L = \frac{1}{N} \sum_{i=1}^{N} (y_{pred, i} - y_{true, i})^2$.
-    * *Why:* Standard choice for **regression** problems. Penalizes larger errors more heavily due to the squaring. Sensitive to outliers.
-    * *Code:* Implements the formula using `MLArray` operations.
+```python
+def mse_loss(y_pred, y_true):
+    diff = y_pred - y_true
+    squared_diff = diff * diff
+    return squared_diff.mean()
+```
 
-* **`mae_loss(y_pred, y_true)` (Mean Absolute Error):**
-    * *Concept:* Calculates the average of the absolute differences between predictions and true values: $L = \frac{1}{N} \sum_{i=1}^{N} |y_{pred, i} - y_{true, i}|$.
-    * *Why:* Another common choice for **regression**. Less sensitive to outliers compared to MSE because errors are not squared.
-    * *Code:* Implements the formula using `MLArray` operations.
+Penalizes larger errors more heavily due to the squaring. Sensitive to outliers.
 
-* **`binary_cross_entropy(y_pred, y_true)`:**
-    * *Concept:* Measures the difference between two probability distributions (the predicted probability and the true label 0 or 1).
-    * *Why:* The standard loss function for **binary classification** problems where the model outputs a probability (usually via a `sigmoid` activation). Expects `y_pred` values between 0 and 1.
-    * *Code:* Implements the formula, includes clipping (`epsilon`) to avoid `log(0)`.
+### Mean Absolute Error (MAE)
 
-* **`categorical_cross_entropy(y_pred, y_true)`:**
-    * *Concept:* Extends binary cross-entropy to multiple classes. Compares the predicted probability distribution (output by `softmax`) to the true distribution (usually one-hot encoded).
-    * *Why:* The standard loss function for **multi-class classification** problems. Expects `y_pred` to be a probability distribution across classes for each sample.
-    * *Code:* Implements the formula, includes clipping (`epsilon`), sums across the class axis, then averages over samples.
+Another common choice for **regression**, less sensitive to outliers:
 
-* **`huber_loss(y_pred, y_true, delta=1.0)`:**
-    * *Concept:* A hybrid loss function that behaves like MSE for small errors (quadratic) and like MAE for large errors (linear). The `delta` parameter controls the transition point.
-    * *Why:* Useful for **regression** problems where you want robustness to outliers (like MAE) but also smoother gradients around the minimum (like MSE).
-    * *Code:* Implements the conditional logic using `MLArray` operations.
+$$L = \frac{1}{N} \sum_{i=1}^{N} |y_{pred, i} - y_{true, i}|$$
 
-*(See `losses.py` for implementation details)*
+```python
+def mae_loss(y_pred, y_true):
+    diff = (y_pred - y_true).abs()
+    return diff.mean()
+```
+
+### Binary Cross-Entropy
+
+Standard loss for **binary classification** where the model outputs a probability:
+
+```python
+def binary_cross_entropy(y_pred, y_true):
+    epsilon = 1e-15  # Prevent log(0)
+    y_pred = MLArray([[max(min(p, 1 - epsilon), epsilon) for p in row] for row in y_pred.data])
+    return -(y_true * y_pred.log() + (1 - y_true) * (1 - y_pred).log()).mean()
+```
+
+The `epsilon` clipping prevents numerical issues when taking `log(0)`.
+
+### Categorical Cross-Entropy
+
+Standard loss for **multi-class classification**, comparing predicted probability distributions to true labels:
+
+```python
+def categorical_cross_entropy(y_pred, y_true):
+    epsilon = 1e-15
+    y_pred = MLArray([[max(p, epsilon) for p in row] for row in y_pred.data])
+    return -(y_true * y_pred.log()).sum(axis=1).mean()
+```
+
+Expects `y_pred` to be a probability distribution across classes (output of softmax) and `y_true` to be one-hot encoded.
+
+### Huber Loss
+
+A hybrid that behaves like MSE for small errors and like MAE for large errors:
+
+```python
+def huber_loss(y_pred, y_true, delta=1.0):
+    diff = y_pred - y_true
+    abs_diff = diff.abs()
+    quadratic = 0.5 * diff * diff
+    linear = delta * abs_diff - 0.5 * delta * delta
+    return MLArray([[quad if abs_d <= delta else lin
+                    for quad, lin, abs_d in zip(row_quad, row_lin, row_abs)]
+                    for row_quad, row_lin, row_abs in zip(quadratic.data, linear.data, abs_diff.data)]).mean()
+```
+
+The `delta` parameter controls the transition point. Useful for **regression** when you want robustness to outliers while maintaining smooth gradients near the minimum.
 
 ---
 
-## Optimizers (`optimizers.py`)
+## Optimizers
 
 **What do optimizers do?**
 
-Once we have calculated the loss, we know how wrong the model is. We also use backpropagation (handled by `MLArray`'s automatic differentiation) to calculate the **gradients** – how the loss changes with respect to each weight and bias in the model.
+Once we have calculated the loss, we know how wrong the model is. We also use backpropagation (handled by `MLArray`'s automatic differentiation) to calculate the **gradients** (how the loss changes with respect to each weight and bias in the model), as we already saw in [SmolML - Core](https://github.com/rodmarkun/SmolML/tree/main/smolml/core).
 
-The **optimizer** is the algorithm that uses these gradients to actually *update* the model's parameters (weights and biases) in a way that aims to decrease the loss over time.
+An **optimizer** an algorithm that uses these gradients to actually *update* the model's parameters (weights and biases) in a way that aims to decrease the loss over time.
 
-**How they work (generally):**
+All optimizers inherit from a base class:
 
-They implement different update rules based on the gradients and often maintain internal "state" (like past gradients or momentum) to improve convergence speed and stability. The core idea is usually a variation of **gradient descent**: move the parameters slightly in the direction opposite to the gradient. The `learning_rate` controls the size of these steps.
+```python
+class Optimizer:
+    def __init__(self, learning_rate: float = 0.01):
+        self.learning_rate = learning_rate
 
-**Key Optimizers Provided:**
+    def update(self, object, object_idx, param_names):
+        raise NotImplementedError
+```
 
-* **`Optimizer` (Base Class):** Defines the interface, requiring an `update` method. Stores the `learning_rate`.
-* **`SGD` (Stochastic Gradient Descent):**
-    * *Concept:* The simplest optimizer. Updates parameters directly opposite to the gradient, scaled by the learning rate ($\theta = \theta - \alpha \nabla_\theta L$). "Stochastic" usually means the gradient is computed on a mini-batch of data, not the full dataset.
-    * *Why:* Easy to understand, but can be slow, get stuck in local minima, or oscillate.
-    * *Code:* Implements the basic update rule.
+### SGD (Stochastic Gradient Descent)
 
-* **`SGDMomentum`:**
-    * *Concept:* Adds a "momentum" term that accumulates an exponentially decaying average of past gradients. This helps accelerate descent in consistent directions and dampens oscillations ($v = \beta v + \alpha \nabla_\theta L$, $\theta = \theta - v$).
-    * *Why:* Often converges faster and more reliably than basic SGD. Introduces `momentum_coefficient` ($\beta$) and maintains velocity (`self.velocities`) state per parameter.
-    * *Code:* Implements the momentum update rule, storing velocities.
+The simplest optimizer: moves parameters directly opposite to the gradient.
 
-* **`AdaGrad` (Adaptive Gradient):**
-    * *Concept:* Adapts the learning rate *per parameter*, using smaller updates for frequently changing parameters and larger updates for infrequent ones. It divides the learning rate by the square root of the sum of past squared gradients ($\theta = \theta - \frac{\alpha}{\sqrt{G + \epsilon}} \nabla_\theta L$).
-    * *Why:* Good for sparse data (like in NLP). However, the learning rate monotonically decreases and can become too small. Maintains sum of squared gradients (`self.squared_gradients`) state.
-    * *Code:* Implements the AdaGrad update rule, storing squared gradients.
+$$\theta = \theta - \alpha \nabla_\theta L$$
 
-* **`Adam` (Adaptive Moment Estimation):**
-    * *Concept:* Combines the ideas of Momentum (using an exponentially decaying average of past gradients - 1st moment) and RMSProp/AdaGrad (using an exponentially decaying average of past *squared* gradients - 2nd moment). Includes bias correction terms to account for initialization.
-    * *Why:* Often considered a robust, effective default optimizer for many problems. Requires tuning `learning_rate`, `exp_decay_gradients` ($\beta_1$), and `exp_decay_squared` ($\beta_2$). Maintains 1st and 2nd moment estimates (`self.gradients_momentum`, `self.squared_gradients_momentum`) and a `timestep`.
-    * *Code:* Implements the Adam update rule with bias correction, storing moment estimates.
+```python
+class SGD(Optimizer):
+    def update(self, object, object_idx, param_names):
+        new_params = tuple(
+            getattr(object, name) - self.learning_rate * getattr(object, name).grad()
+            for name in param_names
+        )
+        return new_params
+```
 
-*(See `optimizers.py` for implementation details)*
+Easy to understand, but can be slow and get stuck in local minima.
 
----
+### SGD with Momentum
 
-## Memory Utilities (`memory.py`)
+Adds a "momentum" term that accumulates past gradients, accelerating descent in consistent directions:
 
-**Why measure memory?**
+$$v = \beta v + \alpha \nabla_\theta L$$
+$$\theta = \theta - v$$
 
-Machine learning models, especially large ones like deep neural networks or complex random forests, can consume significant amounts of memory (RAM). Understanding the memory footprint of your data structures (`Value`, `MLArray`) and models (`NeuralNetwork`, `DecisionTree`, etc.) is crucial for:
-* **Resource Planning:** Ensuring your hardware can handle the model size.
-* **Debugging:** Identifying memory bottlenecks or unexpected usage.
-* **Optimization:** Comparing the memory efficiency of different model architectures or implementations.
+```python
+class SGDMomentum(Optimizer):
+    def __init__(self, learning_rate: float = 0.01, momentum_coefficient: float = 0.9):
+        super().__init__(learning_rate)
+        self.momentum_coefficient = momentum_coefficient
+        self.velocities = {}
 
-**How they work:**
+    def update(self, object, object_idx, param_names):
+        # Initialize velocities for this layer if not exist
+        if object_idx not in self.velocities:
+            self.velocities[object_idx] = {
+                name: zeros(*getattr(object, name).shape) for name in param_names
+            }
 
-These utility functions use Python's built-in `sys.getsizeof` to estimate the memory usage of objects. For complex objects like `MLArray` or model structures (which contain nested objects or lists), they recursively traverse the components and sum their sizes.
+        new_params = []
+        for name in param_names:
+            # Update velocity
+            v = self.velocities[object_idx][name]
+            v = self.momentum_coefficient * v + self.learning_rate * getattr(object, name).grad()
+            self.velocities[object_idx][name] = v
 
-**Key Utilities Provided:**
+            # Compute new parameter
+            new_params.append(getattr(object, name) - v)
 
-* **`format_size(size_bytes)`:** Converts raw byte counts into human-readable formats (KB, MB, GB).
-* **`calculate_value_size(value)`:** Estimates the size of a single `smolml.core.value.Value` object (including its data, grad, etc.).
-* **`calculate_mlarray_size(arr)`:** Estimates the size of an `MLArray`, including the nested lists/`Value` objects it contains.
-* **`calculate_neural_network_size(model)`:** Estimates the total size of a `NeuralNetwork`, including its layers (weights, biases) and optimizer state.
-* **(Other similar functions):** `calculate_decision_node_size`, `calculate_regression_size`, `calculate_decision_tree_size`, `calculate_random_forest_size` estimate memory for other (likely defined elsewhere in `smolml`) model types.
+        return tuple(new_params)
+```
 
-**Note:** These provide *estimates*. Actual memory usage can be influenced by Python's internal memory management, shared object references, etc.
+The `velocities` dictionary maintains the velocity state per parameter across layers.
 
-*(See `memory.py` for implementation details)*
+### AdaGrad (Adaptive Gradient)
+
+Adapts the learning rate *per parameter*: smaller updates for frequently changing parameters, larger updates for infrequent ones.
+
+$$\theta = \theta - \frac{\alpha}{\sqrt{G + \epsilon}} \nabla_\theta L$$
+
+```python
+class AdaGrad(Optimizer):
+    def __init__(self, learning_rate: float = 0.01):
+        super().__init__(learning_rate)
+        self.epsilon = 1e-8
+        self.squared_gradients = {}
+
+    def update(self, object, object_idx, param_names):
+        if object_idx not in self.squared_gradients:
+            self.squared_gradients[object_idx] = {
+                name: zeros(*getattr(object, name).shape) for name in param_names
+            }
+
+        new_params = []
+        for name in param_names:
+            # Update squared gradients sum
+            self.squared_gradients[object_idx][name] += getattr(object, name).grad()**2
+
+            # Compute new parameter
+            new_params.append(
+                getattr(object, name) - (self.learning_rate /
+                (self.squared_gradients[object_idx][name] + self.epsilon).sqrt()) *
+                getattr(object, name).grad()
+            )
+
+        return tuple(new_params)
+```
+
+Good for sparse data (like in NLP), but learning rate monotonically decreases and can become too small.
+
+### Adam (Adaptive Moment Estimation)
+
+Combines Momentum (1st moment) and RMSProp/AdaGrad (2nd moment) with bias correction:
+
+$$m = \beta_1 m + (1 - \beta_1) \nabla_\theta L$$
+$$v = \beta_2 v + (1 - \beta_2) (\nabla_\theta L)^2$$
+$$\hat{m} = \frac{m}{1 - \beta_1^t}, \quad \hat{v} = \frac{v}{1 - \beta_2^t}$$
+$$\theta = \theta - \alpha \frac{\hat{m}}{\sqrt{\hat{v}} + \epsilon}$$
+
+> Here's a [strongly recommended read](https://medium.com/@daga.yash/bias-correction-in-adam-the-statistical-intuition-5908daa01168) on the Adam optimizer in case you're interested! :)
+
+```python
+class Adam(Optimizer):
+    def __init__(self, learning_rate: float = 0.01, exp_decay_gradients: float = 0.9, exp_decay_squared: float = 0.999):
+        super().__init__(learning_rate)
+        self.exp_decay_gradients = exp_decay_gradients
+        self.exp_decay_squared = exp_decay_squared
+        self.gradients_momentum = {}
+        self.squared_gradients_momentum = {}
+        self.epsilon = 1e-8
+        self.timestep = 1
+
+    def update(self, object, object_idx, param_names):
+        # Initialize momentums if not exist
+        if object_idx not in self.gradients_momentum:
+            self.gradients_momentum[object_idx] = {
+                name: zeros(*getattr(object, name).shape) for name in param_names
+            }
+            self.squared_gradients_momentum[object_idx] = {
+                name: zeros(*getattr(object, name).shape) for name in param_names
+            }
+
+        new_params = []
+        for name in param_names:
+            # Update biased first moment estimate
+            self.gradients_momentum[object_idx][name] = (
+                self.exp_decay_gradients * self.gradients_momentum[object_idx][name] +
+                (1 - self.exp_decay_gradients) * getattr(object, name).grad()
+            )
+
+            # Update biased second moment estimate
+            self.squared_gradients_momentum[object_idx][name] = (
+                self.exp_decay_squared * self.squared_gradients_momentum[object_idx][name] +
+                (1 - self.exp_decay_squared) * getattr(object, name).grad()**2
+            )
+
+            # Compute bias-corrected moments
+            m = self.gradients_momentum[object_idx][name] / (1 - self.exp_decay_gradients ** self.timestep)
+            v = self.squared_gradients_momentum[object_idx][name] / (1 - self.exp_decay_squared ** self.timestep)
+
+            # Compute new parameter
+            new_params.append(
+                getattr(object, name) - self.learning_rate * m / (v.sqrt() + self.epsilon)
+            )
+
+        self.timestep += 1
+        return tuple(new_params)
+```
+
+Often considered a robust, effective default optimizer for many problems.
+
+## Run the tests!
+
+Remember that you can check out how do each of these components work by running the correspondent test in the `tests/` folder! They also output some fancy images to let you compare each of them.
+
+## Resources & Readings
+
+- [Bias Correction in Adam: The Statistical Intuition](https://medium.com/@daga.yash/bias-correction-in-adam-the-statistical-intuition-5908daa01168)
