@@ -2,7 +2,7 @@
 
 Welcome to the **Support Vector Machine (SVM)** section of SmolML! SVMs are one of the most elegant algorithms in supervised machine learning: they find the _optimal_ decision boundary between classes by maximizing the margin. Instead of just finding *any* line or hyperplane that separates the data, SVMs find the *best* one.
 
-I hope you like maths because boy, we're up for a ride.
+> NOTE: I hope you like maths because boy, we're up for a ride.
 
 ## Hyperplanes
 
@@ -45,11 +45,10 @@ However, most of the time our data has noise and outliers. We usually can't just
 $$\min_{w,b,\xi} \frac{1}{2}||w||^2 + C\sum_i \xi_i$$
 $$\text{subject to: } y_i(w \cdot x_i - b) \geq 1 - \xi_i, \quad \xi_i \geq 0$$
 
-**Parameter C**: Controls the trade-off
+This C parameter controls the trade-off:
 - Large C → penalize violations heavily → tight margin → may overfit
 - Small C → allow violations → wider margin → more regularization
 
-**In the code**:
 ```python
 def __init__(self, C=1.0, ...):
     self.C = C  # Regularization parameter
@@ -371,10 +370,10 @@ while (num_changed > 0 or examine_all) and iteration < max_iter:
     iteration += 1
 ```
 
-1. **Initially**: Examine **all** points to find initial support vectors
-2. **Find violations**: Identify points violating KKT conditions
-3. **Efficiency**: After a full pass, only examine **non-bound** points (0 < α < C)
-4. **Convergence**: Alternate until no changes occur
+1. Examine **all** points to find initial support vectors
+2. Identify points violating KKT conditions
+3. After a full pass, only examine **non-bound** points (0 < α < C)
+4. Alternate until no changes occur
 
 Why do we alternate, though? Non-bound points are most likely to need updates (they're on the margin). Checking only them speeds up convergence. But we occasionally check all points to ensure we haven't missed anything.
 
@@ -515,7 +514,7 @@ a1_new = a1_old + s * (a2_old - a2_new)
 - Before: $a1_{old} \cdot y_1 + a2_{old} \cdot y_2 = \gamma$
 - After: $a1_{new} \cdot y_1 + a2_{new} \cdot y_2 = (a1_{old} + s(a2_{old} - a2_{new})) \cdot y_1 + a2_{new} \cdot y_2$
 - Simplify: $= a1_{old} \cdot y_1 + a2_{old} \cdot y_1 \cdot y_2 - a2_{new} \cdot y_1 \cdot y_2 + a2_{new} \cdot y_2$
-- Since $y_1 \cdot y_2 = s$ and $y_i^2 = 1$: $= a1_{old} \cdot y_1 + a2_{old} \cdot y_2 = \gamma$ ✓
+- Since $y_1 \cdot y_2 = s$ and $y_i^2 = 1$, $a1_{old} \cdot y_1 + a2_{old} \cdot y_2 = \gamma$ 
 
 ### Step 4: Update Bias $b$
 
@@ -572,8 +571,6 @@ The complete `_take_step` flow is something like this:
 11. return True (success!)
 ```
 
----
-
 ## Making Predictions
 
 Once trained, we have optimal $\alpha$ values. The decision function is:
@@ -592,7 +589,7 @@ def _decision_function_single(self, x):
     return result
 ```
 
-Due to numerical precision, alphas that should be zero might be tiny values like `1e-15`. We use the `ie-8` threshold to treat these as zero.
+> NOTE: Due to numerical precision, alphas that should be zero might be tiny values like `1e-15`. We use the `ie-8` threshold to treat these as zero.
 
 ## Binary Classification
 
@@ -677,13 +674,11 @@ def predict(self, X):
 
 The decision function $f(x)$ represents confidence. Larger values mean the point is further from the boundary, indicating higher confidence.
 
-Great! Following this strategy we can solve classification problems. However, what if we want to use this model for regression? Is it possible?
+Following this simple strategy we can solve classification problems. However, what if we want to use this model for regression? Is it possible?
 
 ## Support Vector Regression (SVR)
 
 SVMs aren't just for classification! **Support Vector Regression (SVR)** applies the same elegant ideas to continuous prediction.
-
-### The ε-Insensitive Tube
 
 In classification, we maximize the margin between classes. In regression, we fit a **tube** around the data.
 
@@ -703,19 +698,16 @@ $$L(y, f(x)) = \max(0, |y - f(x)| - \epsilon)$$
 
 This creates a "tube of tolerance" around predictions.
 
-### Two Sets of Multipliers
-
 For SVR, we need **two** Lagrange multipliers per sample:
 - $\alpha_i$: for points **above** the tube where $y_i - f(x_i) > \epsilon$ (prediction too low)
 - $\alpha_i^*$: for points **below** the tube where $f(x_i) - y_i > \epsilon$ (prediction too high)
 
-**Key constraint**: For each point, at most one of $\alpha_i$ or $\alpha_i^*$ can be non-zero (can't be both above and below the tube simultaneously).
+Our key constraint in here, is that for each point, at most one of $\alpha_i$ or $\alpha_i^*$ can be non-zero (can't be both above and below the tube simultaneously).
 
 ### Prediction Function
 
 $$f(x) = \sum_i (\alpha_i - \alpha_i^*) K(x_i, x) + b$$
 
-**In the code**:
 ```python
 def _predict_single(self, x):
     """Compute f(x) = sum((alpha_i - alpha_i*) * K(x_i, x)) + b"""
@@ -741,7 +733,61 @@ SVR has **two** key parameters:
 - Small ε → Tight tube → More support vectors → Better fit
 - Large ε → Wide tube → Fewer support vectors → Smoother, more regularized
 
-### SVR Example
+## Example Usage
+
+### Binary Classification with SVM
+
+```python
+from smolml.models.svm import SVM
+from smolml.core.ml_array import MLArray
+
+# Binary classification data
+X = [[1, 2], [2, 3], [3, 3], [6, 5], [7, 7], [8, 6]]
+y = [0, 0, 0, 1, 1, 1]
+
+# Train with RBF kernel
+svm = SVM(kernel="rbf", C=1.0, gamma="scale")
+svm.fit(X, y)
+
+print(svm)  # Shows model info and support vectors
+
+# Predict
+predictions = svm.predict([[4, 4], [1, 1]])
+print(f"Predictions: {predictions.to_list()}")
+
+# Accuracy
+accuracy = svm.score(X, y)
+print(f"Training Accuracy: {accuracy:.2%}")
+```
+
+### Multiclass Classification with SVMMulticlass
+
+```python
+from smolml.models.svm import SVMMulticlass
+from smolml.core.ml_array import MLArray
+
+# Multiclass data (3 classes)
+X_multi = [[1, 1], [1, 2], [2, 1],      # Class 0
+           [5, 5], [5, 6], [6, 5],      # Class 1
+           [9, 1], [9, 2], [10, 1]]     # Class 2
+y_multi = [0, 0, 0, 1, 1, 1, 2, 2, 2]
+
+# Train multiclass SVM (One-vs-Rest)
+svm_multi = SVMMulticlass(kernel="rbf", C=1.0, gamma="scale")
+svm_multi.fit(X_multi, y_multi)
+
+print(svm_multi)  # Shows classifiers info
+
+# Predict
+preds = svm_multi.predict([[2, 2], [5, 5], [9, 1]])
+print(f"Predictions: {preds.to_list()}")
+
+# Accuracy
+accuracy = svm_multi.score(X_multi, y_multi)
+print(f"Training Accuracy: {accuracy:.2%}")
+```
+
+### Regression with SVR
 
 ```python
 from smolml.models.svm import SVR
@@ -774,7 +820,7 @@ And that's it! This has been a pretty math-heavy journey, but now our SVM and SV
 
 [Next Section: K-Means](https://github.com/rodmarkun/SmolML/tree/main/smolml/models/unsupervised)
 
-## Resources
+## Resources & Readings
 
 - [**Original SVM paper**: Cortes & Vapnik (1995) - "Support-Vector Networks"](https://link.springer.com/article/10.1007/BF00994018)
 - [Support Vector Machines (SVM): An Intuitive Explanation](https://medium.com/low-code-for-advanced-data-science/support-vector-machines-svm-an-intuitive-explanation-b084d6238106)
