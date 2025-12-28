@@ -202,3 +202,9 @@ With these two core components:
 We have the essential toolkit to build and, more importantly, train various machine learning models, like simple neural networks, entirely from scratch. We can now define network layers, compute loss functions, and use the calculated gradients to update parameters and make our models learn!
 
 [Next section: Linear Regression](https://github.com/rodmarkun/SmolML/tree/main/smolml/models/regression)
+
+## Resources & Readings
+
+- [Andrej Karpathy video - The spelled-out intro to neural networks and backpropagation: building micrograd](https://www.youtube.com/watch?v=VMj-3S1tku0)
+- [A Gentle Introduction to `torch.autograd`](https://docs.pytorch.org/tutorials/beginner/blitz/autograd_tutorial.html)
+- [The N-dimensional array `ndarray`](https://numpy.org/doc/stable/reference/arrays.ndarray.html)

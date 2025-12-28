@@ -421,3 +421,11 @@ for idx in test_indices:
     print(f"  Predicted class: {class_names[pred_class]}")
     print(f"  Actual class: {class_names[actual_class]}")
 ```
+
+Our journey with neural networks has come to an end. However, there are still a lot of models to check out! They all have their own strengths and weaknesses. In the next section, we will cover both decision trees and random forests!
+
+[Next Section: Tree Models](https://github.com/rodmarkun/SmolML/tree/main/smolml/models/tree)
+
+## Resources & Readings
+
+- [Neural Networks from scratch in Python - Book](https://github.com/VaradBelwalkar/Books/blob/master/Neural%20Networks%20from%20Scratch%20in%20Python.pdf)

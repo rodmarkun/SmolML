@@ -449,3 +449,7 @@ print(f"\nPrediction for {X_test.to_list()}: {pred_multi.to_list()}")
 And that's it! We now have a couple of simple models that can learn from data. Now, what if we go to something a bit... *deeper*?
 
 [Next Section: Neural Networks](https://github.com/rodmarkun/SmolML/tree/main/smolml/models/nn)
+
+## Resources & Readings
+
+- [Linear Regression - A Visual Introduction To (Almost) Everything You Should Know](https://mlu-explain.github.io/linear-regression/)
