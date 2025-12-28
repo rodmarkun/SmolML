@@ -665,22 +665,37 @@ class MLArray:
     def __getitem__(self, index):
         """
         Enables array indexing with [] operator.
-        Supports integer indexing and tuples for multiple dimensions.
-        
+        Supports integer indexing, slices, and tuples for multiple dimensions.
+
         Examples:
-            arr[0]     # get first element
-            arr[1, 2]  # get element at row 1, column 2
+            arr[0]      # get first element
+            arr[1, 2]   # get element at row 1, column 2
+            arr[:, 0]   # get first column (all rows, column 0)
+            arr[1:3, :] # get rows 1-2, all columns
         """
         if not isinstance(index, tuple):
             index = (index,)
-            
+
         def get_item_recursive(data, index):
-            if len(index) == 1:
-                return data[index[0]]
-            
+            if len(index) == 0:
+                return data
+
             curr_index = index[0]
-            return get_item_recursive(data[curr_index], index[1:])
-            
+            remaining_index = index[1:]
+
+            if isinstance(curr_index, slice):
+                # Apply slice to current dimension, then recurse on each element
+                sliced_data = data[curr_index]
+                if len(remaining_index) == 0:
+                    return sliced_data
+                # Apply remaining indices to each element in the sliced result
+                return [get_item_recursive(item, remaining_index) for item in sliced_data]
+            else:
+                # Integer index: select that element and continue with remaining indices
+                if len(remaining_index) == 0:
+                    return data[curr_index]
+                return get_item_recursive(data[curr_index], remaining_index)
+
         return MLArray(get_item_recursive(self.data, index))
             
 
