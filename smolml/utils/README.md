@@ -492,4 +492,6 @@ Remember that you can check out how do each of these components work by running 
 
 ## Resources & Readings
 
+- [ML - Common Loss Functions](https://www.geeksforgeeks.org/machine-learning/ml-common-loss-functions/)
 - [Bias Correction in Adam: The Statistical Intuition](https://medium.com/@daga.yash/bias-correction-in-adam-the-statistical-intuition-5908daa01168)
+- [DeeplearningAI - Initializing Neural Networks (Interactive)](https://www.deeplearning.ai/ai-notes/initialization/index.html)

@@ -453,3 +453,4 @@ And that's it! We now have a couple of simple models that can learn from data. N
 ## Resources & Readings
 
 - [Linear Regression - A Visual Introduction To (Almost) Everything You Should Know](https://mlu-explain.github.io/linear-regression/)
+- [NeuralNine Video - Linear Regression From Scratch in Python (Mathematical)](https://www.youtube.com/watch?v=VmbA0pi2cRQ)

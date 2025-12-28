@@ -556,3 +556,10 @@ print(f"\nRF Predictions on new data {X_new.to_list()}: {rf_new_pred.to_list()}"
 We've now implemented both decision trees and random forests! These are powerful models, though they require careful parameter tuning to prevent overfitting. Next up, we will see SVMs, which use geometry to make their predictions!
 
 [Next Section: Support Vector Machines](https://github.com/rodmarkun/SmolML/tree/main/smolml/models/svm)
+
+## Resources & Readings
+
+- [Understanding Decision Trees](https://medium.com/@jainvidip/understanding-decision-trees-1ba0ef5f6bb4)
+- [Sklearn Docs - Decision Trees](https://scikit-learn.org/stable/modules/tree.html)
+- [Sklearn Docs - Ensembles: Gradient boosting, random forests, bagging, voting, stacking](https://scikit-learn.org/stable/modules/ensemble.html)
+- [Random Forest Algorithm in Machine Learning](https://www.geeksforgeeks.org/machine-learning/random-forest-algorithm-in-machine-learning/)
