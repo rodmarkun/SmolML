@@ -429,3 +429,5 @@ Our journey with neural networks has come to an end. However, there are still a 
 ## Resources & Readings
 
 - [Neural Networks from scratch in Python - Book](https://github.com/VaradBelwalkar/Books/blob/master/Neural%20Networks%20from%20Scratch%20in%20Python.pdf)
+- [3Blue1Brown Video - But, what is a Neural Network?](https://www.youtube.com/watch?v=aircAruvnKk)
+- [Sentdex Video - Neural Networks from Scratch - P.1 Intro and Neuron Code](https://www.youtube.com/watch?v=Wo5dMEP_BbI&list=PLQVvvaa0QuDcjD5BAw2DxE6OF2tius3V3)

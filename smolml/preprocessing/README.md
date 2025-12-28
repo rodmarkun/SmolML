@@ -220,3 +220,8 @@ print(f"Learned Max: {scaler_minmax.max}")
 By bringing features onto a common scale using techniques like standardization (`StandardScaler`) or normalization (`MinMaxScaler`), you can often improve your model's convergence speed and performance. In our next section, we will see a ton of utilities that will be extremely helpful for the models we have already implemented!
 
 [Next Section - The Utility Room](https://github.com/rodmarkun/SmolML/tree/main/smolml/utils)
+
+## Resources & Readings
+
+- [Sklearn Docs - Preprocessing](https://scikit-learn.org/stable/modules/preprocessing.html)
+- [Kody Simpson Video - Feature Scaling | Machine Learning Fundamentals](https://www.youtube.com/watch?v=gb1frohFFgM)
