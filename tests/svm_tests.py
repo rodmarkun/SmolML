@@ -13,6 +13,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from smolml.core.ml_array import MLArray
 from smolml.models.svm import SVM, SVMMulticlass, SVR
+from tests.img_utils import image_path
 
 
 class TestSVMClassification(unittest.TestCase):
@@ -86,9 +87,9 @@ class TestSVMClassification(unittest.TestCase):
         axes[1].set_ylabel('Feature 2')
 
         plt.tight_layout()
-        plt.savefig(filename)
+        plt.savefig(image_path(filename))
         plt.close()
-        print(f"  Plot saved: {filename}")
+        print(f"  Plot saved: {image_path(filename)}")
 
     def test_linear_kernel(self):
         """Test linear kernel SVM against sklearn"""
@@ -223,9 +224,9 @@ class TestSVRRegression(unittest.TestCase):
         axes[1].grid(True, alpha=0.3)
 
         plt.tight_layout()
-        plt.savefig(filename)
+        plt.savefig(image_path(filename))
         plt.close()
-        print(f"  Plot saved: {filename}")
+        print(f"  Plot saved: {image_path(filename)}")
 
     def test_rbf_svr(self):
         """Test RBF kernel SVR against sklearn"""

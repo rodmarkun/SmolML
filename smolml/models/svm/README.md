@@ -1,4 +1,4 @@
-# SmolML - Support Vector Machines: Finding the Optimal Boundary!
+# SmolML - Support Vector Machines: Finding Optimal Boundaries
 
 Welcome to the **Support Vector Machine (SVM)** section of SmolML! SVMs are one of the most elegant algorithms in supervised machine learning: they find the _optimal_ decision boundary between classes by maximizing the margin. Instead of just finding *any* line or hyperplane that separates the data, SVMs find the *best* one.
 

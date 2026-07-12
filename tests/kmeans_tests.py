@@ -10,6 +10,7 @@ from sklearn.cluster import KMeans as SKLearnKMeans
 import matplotlib.pyplot as plt
 from smolml.core.ml_array import MLArray
 from smolml.models.unsupervised.kmeans import KMeans
+from tests.img_utils import image_path
 
 class TestKMeansVsSklearn(unittest.TestCase):
     """
@@ -82,7 +83,7 @@ class TestKMeansVsSklearn(unittest.TestCase):
         plt.legend()
         
         plt.tight_layout()
-        plt.savefig('kmeans_comparison.png')
+        plt.savefig(image_path('kmeans_comparison.png'))
         plt.close()
 
     def _compute_inertia(self, X, labels, centroids):
@@ -150,7 +151,7 @@ class TestKMeansVsSklearn(unittest.TestCase):
                 ax.legend()
         
         plt.tight_layout()
-        plt.savefig('kmeans_training_progress.png')
+        plt.savefig(image_path('kmeans_training_progress.png'))
         plt.close()
 
     def test_compare_clustering(self):

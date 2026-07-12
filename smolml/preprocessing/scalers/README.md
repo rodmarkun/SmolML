@@ -1,4 +1,4 @@
-# SmolML - Preprocessing: Make your data meaningful
+# SmolML - Preprocessing: Why Scaling makes our Data Meaningful
 
 Before we feed our precious data into many machine learning algorithms, there's often a crucial preprocessing step: **Feature Scaling**. Why? Because algorithms can be quite sensitive to the *scale* or *range* of our input features!
 

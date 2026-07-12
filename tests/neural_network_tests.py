@@ -13,6 +13,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
 from smolml.core.ml_array import MLArray
+from tests.img_utils import image_path
 from smolml.models.nn.neural_network import NeuralNetwork
 from smolml.models.nn.layer import DenseLayer
 import smolml.utils.activation as activation
@@ -143,7 +144,7 @@ class TestXORProblem(unittest.TestCase):
         plt.grid(True, alpha=0.3, axis='y')
         
         plt.tight_layout()
-        plt.savefig('xor_comparison.png', dpi=150, bbox_inches='tight')
+        plt.savefig(image_path('xor_comparison.png'), dpi=150, bbox_inches='tight')
         plt.close()
         
         print("\nPredictions:")
@@ -151,7 +152,7 @@ class TestXORProblem(unittest.TestCase):
             print(f"Input: {x_sample} → Custom: {custom_preds[i]:.4f}, "
                   f"PyTorch: {torch_preds[i]:.4f}, Actual: {actuals[i]}")
         
-        print("\nPlot saved as 'xor_comparison.png'")
+        print(f"\nPlot saved as {image_path('xor_comparison.png')}")
 
 
 class TestBinaryClassification(unittest.TestCase):
@@ -293,7 +294,7 @@ class TestBinaryClassification(unittest.TestCase):
         plt.ylabel('Feature 2')
         
         plt.tight_layout()
-        plt.savefig('binary_classification_comparison.png', dpi=150, bbox_inches='tight')
+        plt.savefig(image_path('binary_classification_comparison.png'), dpi=150, bbox_inches='tight')
         plt.close()
         
         # Compute and print accuracies
@@ -306,7 +307,7 @@ class TestBinaryClassification(unittest.TestCase):
         print("\nTest Accuracies:")
         print(f"Custom NN: {custom_accuracy:.4f}")
         print(f"TensorFlow: {tf_accuracy:.4f}")
-        print("\nPlot saved as 'binary_classification_comparison.png'")
+        print(f"\nPlot saved as {image_path('binary_classification_comparison.png')}")
 
 
 class TestMultiClassClassification(unittest.TestCase):
@@ -467,7 +468,7 @@ class TestMultiClassClassification(unittest.TestCase):
         plt.grid(True, alpha=0.3, axis='y')
         
         plt.tight_layout()
-        plt.savefig('multiclass_classification_comparison.png', dpi=150, bbox_inches='tight')
+        plt.savefig(image_path('multiclass_classification_comparison.png'), dpi=150, bbox_inches='tight')
         plt.close()
         
         # Calculate accuracies
@@ -492,7 +493,7 @@ class TestMultiClassClassification(unittest.TestCase):
             print(f"  Predicted: {self.class_names[pred_class]} ({pred_probs[pred_class]:.3f})")
             print(f"  Actual: {self.class_names[actual_class]}")
         
-        print("\nPlot saved as 'multiclass_classification_comparison.png'")
+        print(f"\nPlot saved as {image_path('multiclass_classification_comparison.png')}")
 
 
 if __name__ == '__main__':

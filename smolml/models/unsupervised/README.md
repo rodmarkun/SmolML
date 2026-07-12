@@ -1,4 +1,4 @@
-# SmolML - K-Means: Finding Groups in Your Data!
+# SmolML - K-Means: Finding Groups in your Data
 
 So far, we've looked at models that learn from labeled data (**supervised learning**): predicting house prices (*regression*) or classifying images (*classification*). But what if you just have a big pile of data and no labels? How can you find interesting structures or groups within it? Welcome to **Unsupervised Learning**, and one of its most popular tools: **K-Means Clustering**!
 

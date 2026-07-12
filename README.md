@@ -7,7 +7,7 @@
 
 ---
 
-## What is SmolML? 🤔
+## What is SmolML? 
 
 Ever wondered what goes on *inside* those powerful machine learning libraries like [Scikit-Learn](https://scikit-learn.org/stable/), [PyTorch](https://pytorch.org/), or [TensorFlow](https://www.tensorflow.org/)? How does a neural network *actually* learn? How is gradient descent implemented? How do different data-handling tools work?
 
@@ -17,16 +17,24 @@ The goal is to provide a **transparent, understandable, and educational** implem
 
 ## Walkthrough 📖
 
-You can read these guides of the different sections of SmolML in any order, though this list presents the recommended order for learning.
+You can read these guides of the different sections of SmolML in any order, though this list presents the recommended order for learning. Feel free to follow a side-quest when you feel like you need to.
 
+**Main Quests**
 - [SmolML - Core: Automatic Differentiation & N-Dimensional Arrays](https://github.com/rodmarkun/SmolML/tree/main/smolml/core)
 - [SmolML - Regression: Predicting Continuous Values](https://github.com/rodmarkun/SmolML/tree/main/smolml/models/regression)
 - [SmolML - Neural Networks: Backpropagation to the limit](https://github.com/rodmarkun/SmolML/tree/main/smolml/models/nn)
 - [SmolML - Tree Models: Decisions, Decisions!](https://github.com/rodmarkun/SmolML/tree/main/smolml/models/tree)
-- [SmolML - Support Vector Machines: Finding the Optimal Boundary!](https://github.com/rodmarkun/SmolML/tree/main/smolml/models/svm)
-- [SmolML - K-Means: Finding Groups in Your Data!](https://github.com/rodmarkun/SmolML/tree/main/smolml/models/unsupervised)
-- [SmolML - Preprocessing: Make your data meaningful](https://github.com/rodmarkun/SmolML/tree/main/smolml/preprocessing)
-- [SmolML - The utility room!](https://github.com/rodmarkun/SmolML/tree/main/smolml/utils)
+- [SmolML - Support Vector Machines: Finding Optimal Boundaries](https://github.com/rodmarkun/SmolML/tree/main/smolml/models/svm)
+- [SmolML - K-Means: Finding Groups in your Data](https://github.com/rodmarkun/SmolML/tree/main/smolml/models/unsupervised)
+- [SmolML - Tokenizers: Breaking Languages into Numbers](https://github.com/rodmarkun/SmolML/tree/main/smolml/preprocessing/tokenizers)
+
+**Side Quests**
+- [SmolML - Activation Functions: Adding Non-Linearity](https://github.com/rodmarkun/SmolML/tree/main/smolml/utils/activation)
+- [SmolML - Weight Initializers: A Good Start Matters](https://github.com/rodmarkun/SmolML/tree/main/smolml/utils/initializers)
+- [SmolML - Loss Functions: Measuring How Wrong We Are](https://github.com/rodmarkun/SmolML/tree/main/smolml/utils/losses)
+- [SmolML - Optimizers: Learning from Gradients](https://github.com/rodmarkun/SmolML/tree/main/smolml/utils/optimizers)
+- [SmolML - Memory Utilities: How Big is My Model?](https://github.com/rodmarkun/SmolML/tree/main/smolml/utils/memory)
+- [SmolML - Preprocessing: Why Scaling makes our Data Meaningful](https://github.com/rodmarkun/SmolML/tree/main/smolml/preprocessing/scalers)
 
 ### Approach
 
@@ -52,10 +60,10 @@ SmolML provides an implementation of the essential building blocks for any Machi
     * **Scalers (`StandardScaler`, `MinMaxScaler`):** Fundamental tools to prepare your data, because algorithms tend to perform better when features are on a similar scale. (See `smolml/preprocessing/scalers/`)
 
 * **Build Your Own Neural Networks:**
-    * **Activation Functions:** Non-linearities like `relu`, `sigmoid`, `softmax`, `tanh` that allow networks to learn complex patterns. (See `smolml/utils/activation.py`)
-    * **Weight Initializers:** Smart strategies (`Xavier`, `He`) to set initial network weights for stable training. (See `smolml/utils/initializers.py`)
-    * **Loss Functions:** Ways to measure model error (`mse_loss`, `binary_cross_entropy`, `categorical_cross_entropy`). (See `smolml/utils/losses.py`)
-    * **Optimizers:** Algorithms like `SGD`, `Adam`, and `AdaGrad` that update model weights based on gradients to minimize loss. (See `smolml/utils/optimizers.py`)
+    * **Activation Functions:** Non-linearities like `relu`, `sigmoid`, `softmax`, `tanh` that allow networks to learn complex patterns. (See `smolml/utils/activation/`)
+    * **Weight Initializers:** Smart strategies (`Xavier`, `He`) to set initial network weights for stable training. (See `smolml/utils/initializers/`)
+    * **Loss Functions:** Ways to measure model error (`mse_loss`, `binary_cross_entropy`, `categorical_cross_entropy`). (See `smolml/utils/losses/`)
+    * **Optimizers:** Algorithms like `SGD`, `Adam`, and `AdaGrad` that update model weights based on gradients to minimize loss. (See `smolml/utils/optimizers/`)
 
 * **Classic ML Models:**
     * **Regression:** Implementations of `Linear` and `Polynomial` regression.

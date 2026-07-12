@@ -10,6 +10,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from smolml.core.ml_array import MLArray
 import smolml.utils.losses as losses
+from tests.img_utils import image_path
 
 class TestLossFunctions(unittest.TestCase):
     """
@@ -178,7 +179,7 @@ class TestLossFunctions(unittest.TestCase):
         plt.legend()
 
         plt.tight_layout()
-        plt.savefig('loss_functions_comparison.png', bbox_inches='tight', dpi=300)
+        plt.savefig(image_path('loss_functions_comparison.png'), bbox_inches='tight', dpi=300)
         plt.close()
 
 if __name__ == '__main__':

@@ -6,7 +6,7 @@ This part of SmolML focuses on handling this data and calculating gradients auto
 
 ## Why Do We Need Gradients Anyway?
 
-Think about teaching a model to recognize a cat in a photo. The model makes a prediction based on its current internal settings (parameters or weights). Initially, these settings are random, so the prediction is likely wrong. We measure *how wrong* using a **loss function** (we have those in `smolml\utils\losses.py`): basically, *a lower loss means a better prediction*.
+Think about teaching a model to recognize a cat in a photo. The model makes a prediction based on its current internal settings (parameters or weights). Initially, these settings are random, so the prediction is likely wrong. We measure *how wrong* using a **loss function** (we have those in `smolml\utils\losses`): basically, *a lower loss means a better prediction*.
 
 The goal is to adjust our computer's parameters to *minimize* this loss. But how do we know *which way* to adjust each parameter? Should we increase it? Decrease it? By how much?
 
@@ -18,7 +18,7 @@ The goal is to adjust our computer's parameters to *minimize* this loss. But how
 
 This is where **gradients** come in. The gradient of the loss function with respect to a specific parameter tells us the "slope" of the loss at that parameter's current value (orange arrow in the image above!). It points in the direction of the *steepest increase* in the loss. So, if we want to *decrease* the loss, we nudge the parameter in the *opposite* direction of the gradient multiplying by $-\alpha$, where $\alpha$ is our **learning rate** (this multiplication is represented in the purple arrow). Basically, if the gradient points to the left, we want our model to go to the right and vice-versa. That's why we use a negative learning rate! The size of the gradient also tells us how sensitive the loss is to that parameter: a larger gradient means a bigger adjustment might be needed.
 
-A common problem in ML is models getting stuck in local minima while training, where the chosen learning rate isn't big enough to allow them to "leap" out of these suboptimal spots. This is bad! We want our model to reach the lowest possible loss (the global minimum). But if we choose a learning rate that's too big, we may overshoot this global minimum, or even bounce completely away from it. **Optimizers** were built to help tackle problems like this, and we'll see them in one of the next lessons (`smolml\utils\optimizers.py`).
+A common problem in ML is models getting stuck in local minima while training, where the chosen learning rate isn't big enough to allow them to "leap" out of these suboptimal spots. This is bad! We want our model to reach the lowest possible loss (the global minimum). But if we choose a learning rate that's too big, we may overshoot this global minimum, or even bounce completely away from it. **Optimizers** were built to help tackle problems like this, and we'll see them in one of the next lessons (`smolml\utils\optimizers`).
 
 In reality, we never train with just one weight as the image portraits, this is a super-simplified example. For each weight we add, the visualization increases by one dimension. So if we had 100 weights, we'd need to display that in a 101-dimensional plot (100 weights + 1 loss)!
 

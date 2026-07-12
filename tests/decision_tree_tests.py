@@ -12,6 +12,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from smolml.core.ml_array import MLArray
 from smolml.models.tree.decision_tree import DecisionTree
+from tests.img_utils import image_path
 
 class TestDecisionTree(unittest.TestCase):
     """
@@ -101,7 +102,7 @@ class TestDecisionTree(unittest.TestCase):
         
         # Save plot
         plot_type = 'classification' if class_names is not None else 'regression'
-        plt.savefig(f'decision_tree_{plot_type}.png')
+        plt.savefig(image_path(f'decision_tree_{plot_type}.png'))
         plt.close()
 
     def test_classification(self):

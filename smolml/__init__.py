@@ -89,8 +89,7 @@ __all__ = [
     'binary_cross_entropy',
     'categorical_cross_entropy',
     'huber_loss',
-    'log_cosh_loss',
-    
+
     # Utils - Optimizers
     'Optimizer',
     'SGD',

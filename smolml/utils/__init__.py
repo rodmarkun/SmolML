@@ -1,4 +1,4 @@
-# ml_library/utils/__init__.py
+# smolml/utils/__init__.py
 from .activation import (
     relu,
     leaky_relu,
@@ -56,8 +56,7 @@ __all__ = [
     'binary_cross_entropy',
     'categorical_cross_entropy',
     'huber_loss',
-    'log_cosh_loss',
-    
+
     # Optimizers
     'Optimizer',
     'SGD',

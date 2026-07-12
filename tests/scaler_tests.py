@@ -11,6 +11,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from smolml.core.ml_array import MLArray
 from smolml.preprocessing.scalers import StandardScaler, MinMaxScaler
+from tests.img_utils import image_path
 
 class TestScalers(unittest.TestCase):
     """
@@ -74,7 +75,7 @@ class TestScalers(unittest.TestCase):
         
         plt.suptitle(title)
         plt.tight_layout()
-        plt.savefig(filename)
+        plt.savefig(image_path(filename))
         plt.close()
 
     def test_standard_scaler_simple(self):

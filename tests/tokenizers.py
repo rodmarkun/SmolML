@@ -21,6 +21,7 @@ from smolml.preprocessing.tokenizers import (
     WordPiece,
     WordTokenizer,
 )
+from tests.img_utils import image_path
 
 """
 /////////////////////
@@ -463,10 +464,7 @@ class TestTokenizerComparison(unittest.TestCase):
         pieces share a color, so granularity differences and SmolML/reference
         agreement are visible at a glance. Returns the saved image path.
         """
-        image_path = os.path.join(
-            os.path.dirname(os.path.abspath(__file__)),
-            "tokenizer_comparison.png",
-        )
+        output_path = image_path("tokenizer_comparison.png")
         background = "#0e1117"
         strip_height = 0.72
 
@@ -547,14 +545,14 @@ class TestTokenizerComparison(unittest.TestCase):
         )
 
         fig.savefig(
-            image_path,
+            output_path,
             dpi=200,
             bbox_inches="tight",
             facecolor=background,
         )
         plt.close(fig)
 
-        return image_path
+        return output_path
 
     def test_tokenizers_against_standard_frameworks(self):
         """
@@ -569,8 +567,8 @@ class TestTokenizerComparison(unittest.TestCase):
         ]
 
         self._print_comparisons(comparisons)
-        image_path = self._plot_comparisons(comparisons)
-        print(f"\nSaved tokenizer comparison image to {image_path}")
+        output_path = self._plot_comparisons(comparisons)
+        print(f"\nSaved tokenizer comparison image to {output_path}")
 
         self.assertEqual(len(comparisons), 4)
 
