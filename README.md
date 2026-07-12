@@ -49,7 +49,7 @@ SmolML provides an implementation of the essential building blocks for any Machi
     * **N-dimensional Arrays (`MLArray`):** A custom array implementation inspired by [NumPy](https://numpy.org/) (though simplified), supporting common mathematical operations needed for ML. Extremely inefficient due to being written in Python, but ideal for understanding N-Dimensional Arrays, one of the most underrated skills of a ML engineer. (See `smolml/core/ml_array.py`)
 
 * **Essential Preprocessing:**
-    * **Scalers (`StandardScaler`, `MinMaxScaler`):** Fundamental tools to prepare your data, because algorithms tend to perform better when features are on a similar scale. (See `smolml/preprocessing/scalers.py`)
+    * **Scalers (`StandardScaler`, `MinMaxScaler`):** Fundamental tools to prepare your data, because algorithms tend to perform better when features are on a similar scale. (See `smolml/preprocessing/scalers/`)
 
 * **Build Your Own Neural Networks:**
     * **Activation Functions:** Non-linearities like `relu`, `sigmoid`, `softmax`, `tanh` that allow networks to learn complex patterns. (See `smolml/utils/activation.py`)
@@ -83,7 +83,7 @@ You can also run the multiple tests in the `tests/` folder. Just install the `re
 
 ```bash
 cd tests
-pip install -r requirements
+uv pip install -r requirements.txt
 ```
 
 ## Contributing

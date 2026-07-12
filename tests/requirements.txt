@@ -1,6 +1,8 @@
-matplotlib==3.9.2
-numpy>=1.26.0,<2.1.0
-scikit_learn==1.5.2
-setuptools==75.3.0
-tensorflow==2.18.0
+# Test comparison dependencies. TensorFlow 2.18 has no CPython 3.13 wheels.
+matplotlib==3.10.7
+numpy==2.3.4
+scikit_learn==1.7.2
+setuptools==80.9.0
+tensorflow==2.20.0
 torch==2.9.0
+tokenizers>=0.20.0

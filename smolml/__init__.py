@@ -10,7 +10,15 @@ from .models.tree import DecisionTree, RandomForest
 from .models.unsupervised import KMeans
 
 # Import preprocessing
-from .preprocessing import StandardScaler, MinMaxScaler
+from .preprocessing import (
+    BPETokenizer,
+    CharacterTokenizer,
+    MinMaxScaler,
+    StandardScaler,
+    Tokenizer,
+    WordPiece,
+    WordTokenizer,
+)
 
 # Import utilities
 from .utils.activation import (
@@ -54,6 +62,11 @@ __all__ = [
     # Preprocessing
     'StandardScaler',
     'MinMaxScaler',
+    'Tokenizer',
+    'CharacterTokenizer',
+    'WordTokenizer',
+    'BPETokenizer',
+    'WordPiece',
     
     # Utils - Activation Functions
     'relu',

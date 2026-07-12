@@ -39,5 +39,5 @@ dev = [
 [project.urls]
 "Source Code" = "https://github.com/rodmarkun/SmolML"
 
-[tool.setuptools]
-packages = ["smolml"]
+[tool.setuptools.packages.find]
+include = ["smolml*"]
