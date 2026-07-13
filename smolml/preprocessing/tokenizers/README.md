@@ -12,7 +12,7 @@ For example, here the word "hello" corresponds to the number 1, the word "goodby
 
 As you can see, this means a tokenizer can be as simple as a lookup table from language to numbers. All the language units we register in this table conform our **vocabulary**.
 
-## The `Tokenizer` Base Class
+## `Tokenizer` 
 
 First off, we'll create a base class `Tokenizer` that will serve as a foundation for all of our tokenizers, holding all of the shared behavior:
 
@@ -139,7 +139,7 @@ This trades the character tokenizer's problem for the opposite one: sequences be
 
 There has to be a middle ground between characters and words, right? Right! That's exactly what subword tokenizers like BPE are about.
 
-## `BPETokenizer`: Merging Bytes
+## `BPETokenizer`
 
 Now we start with more interesting algorithms. BPE stands for **Byte Pair Encoding**.
 
@@ -262,7 +262,7 @@ def transform(self, text: str):
 
 Note that since we split on whitespace before tokenizing, the spaces themselves are dropped: decoding the ids reconstructs the normalized text without its spaces. Production tokenizers keep spaces around by attaching them to the start of words (that's what the funny `Ġ` symbol means if you've ever peeked inside GPT-2's vocabulary!), but we keep things simple here.
 
-## `WordPiece`: BERT's Take on Subwords
+## `WordPiece`
 
 BPE isn't the only subword tokenizer out there. **WordPiece** is the algorithm behind BERT and its whole family, and at first glance it looks *very* similar to BPE: start from small pieces, iteratively merge pairs into bigger vocabulary entries. The interesting part is in the differences!
 
