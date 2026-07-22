@@ -83,6 +83,10 @@ Each specific tokenizer implements its own `fit()` and `transform()`. Let's buil
 
 This one's easy! We take the characters of a string as our language unit, and assign each one a number:
 
+<div align="center">
+  <img src="../../../images/tokenizers/CharacterTokenizer.gif" alt="CharacterTokenizer splitting text into characters and mapping them to token ids" width="850">
+</div>
+
 ```python
 def fit(self, corpus: str):
     self.token_to_id = {self.pad_token: 0, self.unk_token: 1}
@@ -119,6 +123,10 @@ This gives us a *tiny* vocabulary (there are only so many characters!), but at a
 
 Another easy one. Same deal, but instead of characters we use whole words as language units:
 
+<div align="center">
+  <img src="../../../images/tokenizers/WordTokenizer.gif" alt="WordTokenizer splitting text into words and mapping an unseen word to the unknown token" width="850">
+</div>
+
 ```python
 def fit(self, corpus: str):
     self.token_to_id = {self.pad_token: 0, self.unk_token: 1}
@@ -153,6 +161,10 @@ We chose byte-level here for two reasons: it completely removes the unknown-toke
 Now, just using bytes alone would have a similar effect as the `CharacterTokenizer`: a super long sequence for each text, with a very small vocab size. This is where the concept of byte *pairing* enters:
 
 We look at which pairs of adjacent tokens repeat the most across the whole corpus, and iteratively **merge** the most common one into a new piece of our vocabulary! Frequent fragments like "th" or "ing" quickly become single tokens. This makes the sequence length much smaller while also keeping our vocabulary relatively small. The middle ground we were looking for!
+
+<div align="center">
+  <img src="../../../images/tokenizers/BPETokenizer.gif" alt="Byte Pair Encoding counting adjacent byte pairs and merging the most frequent pair" width="850">
+</div>
 
 One important detail: instead of taking byte pairs as-is across the whole text, we only consider byte pairs *within the same word*. Merges are never allowed to cross a word boundary. Why? If we let merges span across words, the most frequent pairs would quickly become things like the end of one word glued to the start of the next ("e" + "t" from "the tokenizer"), and we'd start creating tokens that mix pieces of two different words. Those tokens don't capture the internal structure of words, they capture which words happen to appear together in our training corpus, and that generalizes terribly to new text. Keeping merges inside word boundaries forces the algorithm to learn actual subword units: prefixes, suffixes, roots... This is also what production tokenizers do (GPT-2, for example, pre-splits text with a regex before doing any merging). As a bonus, it makes training way cheaper: we can count each unique word once and just weight its pairs by how many times the word appears, instead of scanning the entire corpus on every merge.
 
@@ -265,6 +277,10 @@ Note that since we split on whitespace before tokenizing, the spaces themselves 
 ## `WordPiece`
 
 BPE isn't the only subword tokenizer out there. **WordPiece** is the algorithm behind BERT and its whole family, and at first glance it looks *very* similar to BPE: start from small pieces, iteratively merge pairs into bigger vocabulary entries. The interesting part is in the differences!
+
+<div align="center">
+  <img src="../../../images/tokenizers/WordPiece.gif" alt="WordPiece learning character pieces with continuation prefixes and tokenizing with greedy longest-match" width="850">
+</div>
 
 **Difference #1: characters and the `##` prefix.** WordPiece starts from characters instead of bytes, and it marks every piece that *continues* a word with a special prefix, `##` by default. The word "playing" starts its life as `["p", "##l", "##a", "##y", "##i", "##n", "##g"]`:
 
